@@ -1,6 +1,6 @@
 {
   "name": "def-inc",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "description": "A Flexible inheritance module, where you can pick/omit attributes from the parents.",
   "main": "index.js",
   "scripts": {
@@ -8,7 +8,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/Zaggen/bakeIn.git"
+    "url": "https://github.com/Zaggen/def-inc.git"
   },
   "keywords": [
     "mixin",
@@ -16,8 +16,9 @@
     "extend",
     "multiple inheritance",
     "sails.js",
-    "object composition",
-    "composable"
+    "composition",
+    "composable",
+    "define"
   ],
   "author": "Zaggen/Lu Roman <xpynesoul@gmail.com> (https://github.com/Zaggen)",
   "license": "ISC",
