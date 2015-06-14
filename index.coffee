@@ -8,6 +8,7 @@ _= require('lodash')
 #   but the order and quantity of conf arrays must match the order and quantity of parentObjects.
 defIncModule =
   def: (obj, type = 'object')->
+    obj = if _.isFunction(obj) then new obj else obj
     includedTypes = obj.include_
     prototype = obj.prototype_
     privatizedObj = obj.privatize_
@@ -15,6 +16,8 @@ defIncModule =
     newObj._super = {}
     newObjAtrrs = _.mapValues(obj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
     # Filter(separates) parentObjects/classes from configurations arrays
+
+    ###@_checkIfValid(obj, type)###
 
     if  _.size(privatizedObj) > 0
       newObj = privatizedObj
@@ -27,6 +30,7 @@ defIncModule =
 
     @_filterArgs(includedTypes)
     @staticMethods = {}
+
     for baseObj, i in @baseObjs
       @_filter.set(@options[i])
       for own key, attr of baseObj
@@ -52,9 +56,24 @@ defIncModule =
               newObj[key] = _.merge(newObj[key], attr)
 
     @_freezeAndHideAttr(newObj, '_super')
-    if newObj.hasOwnProperty('constructor')
-      newObj = @_makeConstructor(newObj)
-    return newObj
+    if type is 'class'
+      return @_makeConstructor(newObj)
+    else
+      return newObj
+
+  _checkIfValid: (obj, type)->
+    hasConstructor = obj.hasOwnProperty('constructor')
+
+    if type is 'object' and  hasConstructor
+      msg = '''
+            Constructor is a reserved keyword, to define classes
+            when using def.Class method, but you are
+            defining an object
+            '''
+      throw new Error msg
+    else if type is 'class' and hasConstructor
+      msg 'No constructor defined in the object. To create a class a constructor must be defined as a key'
+      throw new Error msg
 
   _setSuperConstructor: (target, constructor)->
     target._super.constructor = (superArgs...)-> constructor.apply(superArgs.shift(), superArgs)
@@ -192,7 +211,6 @@ defIncModule =
       Object.freeze obj[attributeName]
 
   _makeConstructor: (obj)->
-    #console.log 'Making constructor'
     fn = (args...)->
       obj.constructor.apply(this, args)
     fn.prototype = obj
