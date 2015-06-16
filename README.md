@@ -52,9 +52,16 @@ Admin = def.Class(
 zaggen = new Admin('zaggen')
 ```
 #### Usage with real private methods and attrs(shared)
-You can use true privacy. Only for methods, you can define private attributes, but they will be shared attr(js fault),
-so its only usefull for objects or when you want that attribute shared, you can use weakMaps to overcome this, but
-the point here is to be able to define private methods. You can't inherit these attributes.
+You can get true privacy when passing a lambda instead of an object, in this anonymous fn you will define your public
+attrs as instance members of that fn, and your private attributes as local variables, the nice thing here is a that all
+your public functions will have access to the private stuff (This is a closure that is executed internally) and you
+can define your private variables at the bottom like in ruby, which is hard to do in cs because we only have fn 
+expressions so we don't get hoisted fns... anyways, you can use private properties too (data) but this data will be 
+shared across all instances of the class, so be aware of that, its usefull for objects, but not that much for classes.
+You can use weakMaps to accomplish this but that is not something def-inc will do for you, additionally bare in mind that
+if you add public functions later, this fns can't access the previously defined private properties, because they will be
+out of scope, so monkey patching is not possible, also you can't inherit private members. Is probably better to use
+the underscore convention for private attrs in most cases, but sometimes you really want this behavior, so here it is.
 ```coffeescript
 Admin = def.Class ->
   # private properties have to be defined at the top in cs
