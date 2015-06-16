@@ -51,7 +51,7 @@ Admin = def.Class(
 )
 zaggen = new Admin('zaggen')
 ```
-#### Usage with private real methods and attrs
+#### Usage with real private methods and attrs(shared)
 You can use true privacy. Only for methods, you can define private attributes, but they will be shared attr(js fault),
 so its only usefull for objects or when you want that attribute shared, you can use weakMaps to overcome this, but
 the point here is to be able to define private methods. You can't inherit these attributes.
