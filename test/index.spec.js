@@ -192,25 +192,6 @@
           expect(definedObj.propertyIsEnumerable('_super')).to.be["false"];
           return expect(Object.isFrozen(definedObj._super)).to.be["true"];
         });
-        it('should be able to call truly private variables, when using a function as argument instead of an obj', function() {
-          var definedObj;
-          definedObj = def.Object(function() {
-            var privateVar;
-            privateVar = 5;
-            this.set = function(n) {
-              return privateVar = n;
-            };
-            this.get = function() {
-              return privateVar;
-            };
-            return this;
-          });
-          console.log(definedObj);
-          expect(definedObj.privateVar).to.not.exist;
-          expect(definedObj.get()).to.equal(5);
-          definedObj.set(4);
-          return expect(definedObj.get()).to.equal(4);
-        });
         it('should include attributes from constructor functions/classes prototypes, when constructor is excluded', function() {
           var Parent, definedObj;
           Parent = (function() {
@@ -228,6 +209,41 @@
           });
           expect(definedObj.someMethod).to.exist;
           return expect(definedObj.someMethod()).to.equal('x');
+        });
+        describe('when using a function as argument instead of an obj', function() {
+          it('should be able to call truly static private attributes, when defining it as a local variable of the fn', function() {
+            var definedObj;
+            definedObj = def.Object(function() {
+              var privateVar;
+              privateVar = 5;
+              this.set = function(n) {
+                return privateVar = n;
+              };
+              this.get = function() {
+                return privateVar;
+              };
+              return this;
+            });
+            expect(definedObj.privateVar).to.not.exist;
+            expect(definedObj.get()).to.equal(5);
+            definedObj.set(4);
+            return expect(definedObj.get()).to.equal(4);
+          });
+          return it('should be able to call truly private methods, when defining it as a local variable of the fn', function() {
+            var definedObj;
+            definedObj = def.Object(function() {
+              var square;
+              this.calculate = function(n) {
+                return square(n);
+              };
+              square = function(n) {
+                return n * n;
+              };
+              return this;
+            });
+            console.log(definedObj);
+            return expect(definedObj.calculate(5)).to.equal(25);
+          });
         });
         describe('When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', function() {
           it('should bind the method context to the original obj (parent) instead of the target obj', function() {

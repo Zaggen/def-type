@@ -122,23 +122,6 @@ describe 'def-inc Module', ->
         expect(definedObj.propertyIsEnumerable('_super')).to.be.false
         expect(Object.isFrozen(definedObj._super)).to.be.true
 
-
-      it 'should be able to call truly private variables, when using a function as argument instead of an obj', ->
-        definedObj = def.Object ->
-          # Private Attrs
-          privateVar = 5
-          # Public Attrs
-          @set = (n)-> privateVar = n
-          @get = -> privateVar
-
-          return this
-
-        console.log definedObj
-        expect(definedObj.privateVar).to.not.exist
-        expect(definedObj.get()).to.equal(5)
-        definedObj.set(4)
-        expect(definedObj.get()).to.equal(4)
-
       it 'should include attributes from constructor functions/classes prototypes, when constructor is excluded', ->
         class Parent
           someMethod: -> 'x'
@@ -146,6 +129,32 @@ describe 'def-inc Module', ->
         definedObj = def.Object( include_: [ Parent, ['!', 'constructor'], baseObj5, ['*'] ] )
         expect(definedObj.someMethod).to.exist
         expect(definedObj.someMethod()).to.equal('x')
+
+      describe 'when using a function as argument instead of an obj', ->
+        it 'should be able to call truly static private attributes, when defining it as a local variable of the fn', ->
+          definedObj = def.Object ->
+            # Private Attrs
+            privateVar = 5
+            # Public Attrs
+            @set = (n)-> privateVar = n
+            @get = -> privateVar
+
+            return this
+
+          expect(definedObj.privateVar).to.not.exist
+          expect(definedObj.get()).to.equal(5)
+          definedObj.set(4)
+          expect(definedObj.get()).to.equal(4)
+
+        it 'should be able to call truly private methods, when defining it as a local variable of the fn', ->
+          definedObj = def.Object ->
+            @calculate = (n)-> square(n)
+            # Private Methods
+            square = (n)-> n * n
+            return this
+
+          console.log definedObj
+          expect(definedObj.calculate(5)).to.equal(25)
 
       describe 'When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', ->
         it 'should bind the method context to the original obj (parent) instead of the target obj', ->
