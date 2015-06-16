@@ -68,7 +68,9 @@ Admin = def.Class ->
   instanceNumber = 0
   # Public
   @constructor = (@name)->
-    @privileges = 'all'
+    instanceNumber++
+    
+  @getInstanceQ = -> return instanceNumber
   @deleteUser = (id)->
     dbQuery('delete', id)
   @modifyUser = (id, data)->
