@@ -44,13 +44,40 @@ Admin = def.Class(
   include_: [ accountTraits, ['logIn', 'logOut'],  User, ['*'] ]
   constructor: (@name)->
     @privileges = 'all'
-  deleteUsers: ->
+  deleteUser: ->
     # Some Code
-  modifyUsers: ->
+  modifyUser: ->
     # Some Code
 )
 zaggen = new Admin('zaggen')
 ```
+#### Usage with private real methods and attrs
+You can use true privacy. Only for methods, you can define private attributes, but they will be shared attr(js fault),
+so its only usefull for objects or when you want that attribute shared, you can use weakMaps to overcome this, but
+the point here is to be able to define private methods. You can't inherit these attributes.
+```coffeescript
+Admin = def.Class ->
+  # private properties have to be defined at the top in cs
+  instanceNumber = 0
+  # Public
+  @constructor = (@name)->
+    @privileges = 'all'
+  @deleteUser = (id)->
+    dbQuery('delete', id)
+  @modifyUser = (id, data)->
+    dbQuery('modify', id, data)
+    
+  # Private Methods
+  dbQuery = (action, id, data = {})->
+    # Some Code
+    
+  this
+
+zaggen = new Admin('zaggen')
+zaggen.deleteUser(5) # Works
+zaggen.dbQuery('delete',5) # Won't work
+```
+
 ## Inheriting
 * `baseObjectN` **Object** (Optional) Objects to extend the receivingObj, they will take precedence from last to first.
 * `configN` **Array** (Optional) with flags(`!`, `*`,`~`) and/or attribute names, e.g:
