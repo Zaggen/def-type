@@ -8,7 +8,7 @@ _= require('lodash')
 #   but the order and quantity of conf arrays must match the order and quantity of parentObjects.
 defIncModule =
   def: (obj, type = 'object')->
-    obj = if _.isFunction(obj) then new obj else obj
+    obj = if _.isFunction(obj) then obj.call({}) else obj
     includedTypes = obj.include_
     prototype = obj.prototype_
     privatizedObj = obj.privatize_

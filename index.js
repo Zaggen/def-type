@@ -12,7 +12,7 @@
       if (type == null) {
         type = 'object';
       }
-      obj = _.isFunction(obj) ? new obj : obj;
+      obj = _.isFunction(obj) ? obj.call({}) : obj;
       includedTypes = obj.include_;
       prototype = obj.prototype_;
       privatizedObj = obj.privatize_;
