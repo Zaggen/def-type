@@ -80,11 +80,27 @@ Admin = def.Class ->
   dbQuery = (action, id, data = {})->
     # Some Code
     
-  this
-
 zaggen = new Admin('zaggen')
 zaggen.deleteUser(5) # Works
 zaggen.dbQuery('delete',5) # Won't work
+```
+
+#### Usage with real private methods and attrs(shared) and accessors
+```coffeescript
+user = def.Object ->
+  name = 'John'
+  lastName =  'Doe'
+  @accessors_ = ['fullName'] # Add the names of the properties that you want to define as accessors
+  @fullName =
+    get: -> "#{name} #{lastName}"
+    set: (fullName)->
+      nameParts = fullName.split(' ')
+      name = nameParts[0]
+      lastName = nameParts[1]
+    
+console.log user.fullName # Logs 'John Doe'
+user.fullName = 'Max Payne' # Sets the private name and lastName variables with the value provided
+console.log user.fullName # Logs 'Max Payne'
 ```
 
 ## Inheriting
