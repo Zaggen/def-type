@@ -44,6 +44,7 @@ describe 'def-inc Module', ->
     itemList: ['item5']
 
   describe 'def.Object method define an object that can inherit attributes from multiple objects/classes', ->
+
     describe 'The def-inc module', ->
       it 'should have an Object method', ->
         expect(def.Object).to.exist
@@ -129,6 +130,50 @@ describe 'def-inc Module', ->
         definedObj = def.Object( include_: [ Parent, ['!', 'constructor'], baseObj5, ['*'] ] )
         expect(definedObj.someMethod).to.exist
         expect(definedObj.someMethod()).to.equal('x')
+
+      describe 'When the accessors_ property is defined', ->
+        ###describe 'In the object passed as argument to the def method (Object/Class)', ->
+          definedObj = def.Object(
+            accessors_: ['fullName']
+            _name: 'John'
+            _lastName: 'Doe'
+            fullName:
+              get: -> "#{@_name} #{@_lastName}"
+              set: (fullName)->
+                nameParts = fullName.split(' ')
+                @_name = nameParts[0]
+                @_lastName = nameParts[1]
+          )
+          it 'should set the getter to the specified attribute', ->
+            expect(definedObj.fullName).to.equal('John Doe')
+
+          it 'should set the setter to the specified attribute', ->
+            definedObj.fullName
+            expect(definedObj.fullName).to.equal('John Doe')###
+
+        describe.only 'In a fn passed as argument to the def method (Object/Class)', ->
+          definedObj = def.Object ->
+            name = 'John'
+            lastName =  'Doe'
+            @accessors_ = ['fullName']
+            @fullName = {
+              get: -> "#{name} #{lastName}"
+              set: (fullName)->
+                nameParts = fullName.split(' ')
+                name = nameParts[0]
+                lastName = nameParts[1]
+            }
+            @hp = 234
+
+          console.log 'definedObj', definedObj
+
+          it 'should set the getter to the specified attribute', ->
+            expect(definedObj.fullName).to.equal('John Doe')
+
+          it 'should set the setter to the specified attribute', ->
+            definedObj.fullName
+            expect(definedObj.fullName).to.equal('John Doe')
+
 
       describe 'when using a function as argument instead of an obj', ->
         it 'should be able to call truly static private attributes, when defining it as a local variable of the fn', ->
