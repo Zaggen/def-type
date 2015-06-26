@@ -211,34 +211,40 @@
           return expect(definedObj.someMethod()).to.equal('x');
         });
         describe('When the accessors_ property is defined', function() {
-
-          /*describe 'In the object passed as argument to the def method (Object/Class)', ->
-            definedObj = def.Object(
-              accessors_: ['fullName']
-              _name: 'John'
-              _lastName: 'Doe'
-              fullName:
-                get: -> "#{@_name} #{@_lastName}"
-                set: (fullName)->
-                  nameParts = fullName.split(' ')
-                  @_name = nameParts[0]
-                  @_lastName = nameParts[1]
-            )
-            it 'should set the getter to the specified attribute', ->
-              expect(definedObj.fullName).to.equal('John Doe')
-          
-            it 'should set the setter to the specified attribute', ->
-              definedObj.fullName
-              expect(definedObj.fullName).to.equal('John Doe')
-           */
-          return describe.only('In a fn passed as argument to the def method (Object/Class)', function() {
+          describe('In the object passed as argument to the def method (Object/Class)', function() {
+            var definedObj;
+            definedObj = def.Object({
+              accessors_: ['fullName'],
+              _name: 'John',
+              _lastName: 'Doe',
+              fullName: {
+                get: function() {
+                  return this._name + " " + this._lastName;
+                },
+                set: function(fullName) {
+                  var nameParts;
+                  nameParts = fullName.split(' ');
+                  this._name = nameParts[0];
+                  return this._lastName = nameParts[1];
+                }
+              }
+            });
+            it('should set the getter to the specified attribute', function() {
+              return expect(definedObj.fullName).to.equal('John Doe');
+            });
+            return it('should set the setter to the specified attribute', function() {
+              definedObj.fullName;
+              return expect(definedObj.fullName).to.equal('John Doe');
+            });
+          });
+          return describe('In a fn passed as argument to the def method (Object/Class)', function() {
             var definedObj;
             definedObj = def.Object(function() {
               var lastName, name;
               name = 'John';
               lastName = 'Doe';
               this.accessors_ = ['fullName'];
-              this.fullName = {
+              return this.fullName = {
                 get: function() {
                   return name + " " + lastName;
                 },
@@ -249,7 +255,6 @@
                   return lastName = nameParts[1];
                 }
               };
-              return this.hp = 234;
             });
             console.log('definedObj', definedObj);
             it('should set the getter to the specified attribute', function() {
@@ -270,10 +275,9 @@
               this.set = function(n) {
                 return privateVar = n;
               };
-              this.get = function() {
+              return this.get = function() {
                 return privateVar;
               };
-              return this;
             });
             expect(definedObj.privateVar).to.not.exist;
             expect(definedObj.get()).to.equal(5);
@@ -287,10 +291,9 @@
               this.calculate = function(n) {
                 return square(n);
               };
-              square = function(n) {
+              return square = function(n) {
                 return n * n;
               };
-              return this;
             });
             console.log(definedObj);
             return expect(definedObj.calculate(5)).to.equal(25);

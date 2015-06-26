@@ -132,7 +132,7 @@ describe 'def-inc Module', ->
         expect(definedObj.someMethod()).to.equal('x')
 
       describe 'When the accessors_ property is defined', ->
-        ###describe 'In the object passed as argument to the def method (Object/Class)', ->
+        describe 'In the object passed as argument to the def method (Object/Class)', ->
           definedObj = def.Object(
             accessors_: ['fullName']
             _name: 'John'
@@ -149,21 +149,19 @@ describe 'def-inc Module', ->
 
           it 'should set the setter to the specified attribute', ->
             definedObj.fullName
-            expect(definedObj.fullName).to.equal('John Doe')###
+            expect(definedObj.fullName).to.equal('John Doe')
 
-        describe.only 'In a fn passed as argument to the def method (Object/Class)', ->
+        describe 'In a fn passed as argument to the def method (Object/Class)', ->
           definedObj = def.Object ->
             name = 'John'
             lastName =  'Doe'
             @accessors_ = ['fullName']
-            @fullName = {
+            @fullName =
               get: -> "#{name} #{lastName}"
               set: (fullName)->
                 nameParts = fullName.split(' ')
                 name = nameParts[0]
                 lastName = nameParts[1]
-            }
-            @hp = 234
 
           console.log 'definedObj', definedObj
 
@@ -184,8 +182,6 @@ describe 'def-inc Module', ->
             @set = (n)-> privateVar = n
             @get = -> privateVar
 
-            return this
-
           expect(definedObj.privateVar).to.not.exist
           expect(definedObj.get()).to.equal(5)
           definedObj.set(4)
@@ -196,7 +192,6 @@ describe 'def-inc Module', ->
             @calculate = (n)-> square(n)
             # Private Methods
             square = (n)-> n * n
-            return this
 
           console.log definedObj
           expect(definedObj.calculate(5)).to.equal(25)
