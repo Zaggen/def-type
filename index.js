@@ -7,15 +7,20 @@
   _ = require('lodash');
 
   defIncModule = {
-    def: function(obj, type) {
-      var attr, baseObj, fn, i, includedTypes, j, key, len, newObj, newObjAtrrs, privatizedObj, prototype, ref, reservedKeys;
+    def: function(propsDefiner, type) {
+      var accessors, attr, baseObj, fn, i, includedTypes, j, key, len, newObj, newObjAtrrs, obj, ref, reservedKeys;
       if (type == null) {
         type = 'object';
       }
-      obj = _.isFunction(obj) ? obj.call({}) : obj;
+      obj = {};
+      if (_.isFunction(propsDefiner)) {
+        propsDefiner.call(obj);
+      } else {
+        obj = propsDefiner;
+      }
+      console.log('obj', obj, "\n");
       includedTypes = obj.include_;
-      prototype = obj.prototype_;
-      privatizedObj = obj.privatize_;
+      accessors = obj.accessors_;
       newObj = {};
       newObj._super = {};
       newObjAtrrs = _.mapValues(obj, function(val) {
@@ -23,16 +28,16 @@
       });
 
       /*@_checkIfValid(obj, type) */
-      if (_.size(privatizedObj) > 0) {
-        newObj = privatizedObj;
-      } else {
-        reservedKeys = ['include_', 'prototype_', 'privatize_'];
-        for (key in obj) {
-          attr = obj[key];
-          if (!_.contains(reservedKeys, key)) {
-            newObj[key] = attr;
-          }
+      reservedKeys = ['include_', 'prototype_', 'accessors_'];
+      for (key in obj) {
+        attr = obj[key];
+        if (!_.contains(reservedKeys, key)) {
+          newObj[key] = attr;
         }
+      }
+      console.log('newObj', newObj, "\n");
+      if (accessors != null) {
+        this._defineAccessors(newObj, accessors);
       }
       this._filterArgs(includedTypes);
       this.staticMethods = {};
@@ -85,6 +90,15 @@
         msg('No constructor defined in the object. To create a class a constructor must be defined as a key');
         throw new Error(msg);
       }
+    },
+    _defineAccessors: function(obj, accessorsList) {
+      var j, len, propertyName, results;
+      results = [];
+      for (j = 0, len = accessorsList.length; j < len; j++) {
+        propertyName = accessorsList[j];
+        results.push(Object.defineProperty(obj, propertyName, obj[propertyName]));
+      }
+      return results;
     },
     _setSuperConstructor: function(target, constructor) {
       return target._super.constructor = function() {

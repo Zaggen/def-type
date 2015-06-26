@@ -7,11 +7,17 @@ _= require('lodash')
 #   bakeIn(obj1, ['attr1'], obj2, ['*'], obj3, ['attr2'], targetObj), it doesn't matter if you mix them up,
 #   but the order and quantity of conf arrays must match the order and quantity of parentObjects.
 defIncModule =
-  def: (obj, type = 'object')->
-    obj = if _.isFunction(obj) then obj.call({}) else obj
+  def: (propsDefiner, type = 'object')->
+    obj = {}
+    if _.isFunction(propsDefiner)
+      propsDefiner.call(obj)
+    else
+      obj = propsDefiner
+
+    console.log 'obj', obj, "\n"
     includedTypes = obj.include_
-    prototype = obj.prototype_
-    privatizedObj = obj.privatize_
+    # prototype = obj.prototype_ # Not used yet
+    accessors = obj.accessors_
     newObj = {}
     newObj._super = {}
     newObjAtrrs = _.mapValues(obj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
@@ -19,14 +25,16 @@ defIncModule =
 
     ###@_checkIfValid(obj, type)###
 
-    if  _.size(privatizedObj) > 0
-      newObj = privatizedObj
-    else
-      reservedKeys = ['include_', 'prototype_', 'privatize_']
-      for key, attr of obj
-        unless _.contains(reservedKeys, key)
-          newObj[key] = attr
+    reservedKeys = ['include_', 'prototype_', 'accessors_']
+    for key, attr of obj
+      unless _.contains(reservedKeys, key)
+        newObj[key] = attr
 
+
+    console.log 'newObj', newObj, "\n"
+
+    if accessors?
+      @_defineAccessors(newObj, accessors)
 
     @_filterArgs(includedTypes)
     @staticMethods = {}
@@ -55,6 +63,7 @@ defIncModule =
             else if _.isObject(attr) and key isnt '_super'
               newObj[key] = _.merge(newObj[key], attr)
 
+
     @_freezeAndHideAttr(newObj, '_super')
     if type is 'class'
       return @_makeConstructor(newObj)
@@ -74,6 +83,10 @@ defIncModule =
     else if type is 'class' and hasConstructor
       msg 'No constructor defined in the object. To create a class a constructor must be defined as a key'
       throw new Error msg
+
+  _defineAccessors: (obj, accessorsList)->
+    for propertyName in accessorsList
+      Object.defineProperty(obj, propertyName, obj[propertyName])
 
   _setSuperConstructor: (target, constructor)->
     target._super.constructor = (superArgs...)-> constructor.apply(superArgs.shift(), superArgs)
