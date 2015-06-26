@@ -163,8 +163,6 @@ describe 'def-inc Module', ->
                 name = nameParts[0]
                 lastName = nameParts[1]
 
-          console.log 'definedObj', definedObj
-
           it 'should set the getter to the specified attribute', ->
             expect(definedObj.fullName).to.equal('John Doe')
 

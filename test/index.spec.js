@@ -256,7 +256,6 @@
                 }
               };
             });
-            console.log('definedObj', definedObj);
             it('should set the getter to the specified attribute', function() {
               return expect(definedObj.fullName).to.equal('John Doe');
             });
