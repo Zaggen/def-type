@@ -14,7 +14,6 @@ defIncModule =
     else
       obj = propsDefiner
 
-    console.log 'obj', obj, "\n"
     includedTypes = obj.include_
     # prototype = obj.prototype_ # Not used yet
     accessors = obj.accessors_
@@ -29,9 +28,6 @@ defIncModule =
     for key, attr of obj
       unless _.contains(reservedKeys, key)
         newObj[key] = attr
-
-
-    console.log 'newObj', newObj, "\n"
 
     if accessors?
       @_defineAccessors(newObj, accessors)

@@ -18,7 +18,6 @@
       } else {
         obj = propsDefiner;
       }
-      console.log('obj', obj, "\n");
       includedTypes = obj.include_;
       accessors = obj.accessors_;
       newObj = {};
@@ -35,7 +34,6 @@
           newObj[key] = attr;
         }
       }
-      console.log('newObj', newObj, "\n");
       if (accessors != null) {
         this._defineAccessors(newObj, accessors);
       }
