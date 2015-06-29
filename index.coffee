@@ -14,9 +14,9 @@ defIncModule =
     else
       obj = propsDefiner
 
-    includedTypes = obj.include_
-    # prototype = obj.prototype_ # Not used yet
-    accessors = obj.accessors_
+    includedTypes = obj.include
+    # prototype = obj.prototype # Not used yet
+    accessors = obj.accessors
     newObj = {}
     newObj._super = {}
     newObjAtrrs = _.mapValues(obj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
@@ -24,7 +24,7 @@ defIncModule =
 
     ###@_checkIfValid(obj, type)###
 
-    reservedKeys = ['include_', 'prototype_', 'accessors_']
+    reservedKeys = ['include', 'prototype', 'accessors']
     for key, attr of obj
       unless _.contains(reservedKeys, key)
         newObj[key] = attr

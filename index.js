@@ -18,8 +18,8 @@
       } else {
         obj = propsDefiner;
       }
-      includedTypes = obj.include_;
-      accessors = obj.accessors_;
+      includedTypes = obj.include;
+      accessors = obj.accessors;
       newObj = {};
       newObj._super = {};
       newObjAtrrs = _.mapValues(obj, function(val) {
@@ -27,7 +27,7 @@
       });
 
       /*@_checkIfValid(obj, type) */
-      reservedKeys = ['include_', 'prototype_', 'accessors_'];
+      reservedKeys = ['include', 'prototype', 'accessors'];
       for (key in obj) {
         attr = obj[key];
         if (!_.contains(reservedKeys, key)) {
