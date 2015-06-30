@@ -225,7 +225,7 @@ describe 'def-inc Module', ->
 
           expect(definedObj.multiply(2, 2)).to.equal(8)
 
-    describe.only 'def.Class method', ->
+    describe 'def.Class method', ->
 
       it 'should define a js "Class" when a constructor method is defined', ->
         definedClass = def.Class(
@@ -235,15 +235,12 @@ describe 'def-inc Module', ->
         expect(definedClass).to.be.a('function')
         expect(new definedClass).to.be.an('object')
 
-      it.only 'should throw an error when a constructor method is not defined', ->
+      it 'should throw an error when a constructor method is not defined', ->
         defClass = ->
           def.Class(someMethod: -> true)
 
         expect(defClass).to.throw(Error)
 
-
-
-      #  defines a Class/Type/Constructor that can inherit attributes from multiple objects/classes
 
       it 'should include static attributes (classAttributes) from constructor functions/classes, to the resulting constructor, when one is defined', ->
         class Parent
