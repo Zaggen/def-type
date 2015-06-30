@@ -210,6 +210,34 @@
           expect(definedObj.someMethod).to.exist;
           return expect(definedObj.someMethod()).to.equal('x');
         });
+        it('should throw an error when a constructor method is defined', function() {
+          var defObject;
+          defObject = function() {
+            return def.defObject({
+              constructor: function() {
+                return true;
+              }
+            });
+          };
+          return expect(defObject).to["throw"](Error);
+        });
+        it('should not include static attributes (classAttributes) from constructor functions/classes', function() {
+          var Parent, definedObj;
+          Parent = (function() {
+            function Parent() {}
+
+            Parent.staticMethod = function() {
+              return 'y';
+            };
+
+            return Parent;
+
+          })();
+          definedObj = def.Object({
+            include: [Parent, ['!', 'constructor']]
+          });
+          return expect(definedObj.staticMethod).to.not.exist;
+        });
         describe('When the accessors property is defined', function() {
           describe('In the object passed as argument to the def method (Object/Class)', function() {
             var definedObj;
@@ -373,45 +401,30 @@
           };
           return expect(defClass).to["throw"](Error);
         });
-        it('should include static attributes (classAttributes) from constructor functions/classes, to the resulting constructor, when one is defined', function() {
-          var Parent, definedClass, instanceOfBaked;
-          Parent = (function() {
-            function Parent() {}
+        describe('When class attributes (static) are defined in a parent class', function() {
+          return it('should add them to the defined class as static attributes', function() {
+            var Parent, definedClass, instanceOfBaked;
+            Parent = (function() {
+              function Parent() {}
 
-            Parent.staticMethod = function() {
-              return 'y';
-            };
+              Parent.staticMethod = function() {
+                return 'y';
+              };
 
-            return Parent;
+              return Parent;
 
-          })();
-          definedClass = def.Class({
-            include: [Parent],
-            constructor: function() {
-              return true;
-            }
+            })();
+            definedClass = def.Class({
+              include: [Parent, ['!', 'attr']],
+              constructor: function() {
+                return true;
+              }
+            });
+            expect(definedClass.staticMethod).to.exist;
+            expect(definedClass.staticMethod()).to.equal('y');
+            instanceOfBaked = new definedClass;
+            return expect(instanceOfBaked.staticMethod).to.not.exist;
           });
-          instanceOfBaked = new definedClass;
-          expect(instanceOfBaked.staticMethod).to.exist;
-          return expect(instanceOfBaked.staticMethod()).to.equal('y');
-        });
-        it('should not include static attributes (classAttributes) from constructor functions/classes, when a constructor is not defined', function() {
-          var Parent, definedObj;
-          Parent = (function() {
-            function Parent() {}
-
-            Parent.staticMethod = function() {
-              return 'y';
-            };
-
-            return Parent;
-
-          })();
-          definedObj = def.Object({
-            include: [Parent, ['!', 'constructor']]
-          });
-          expect(definedObj.staticMethod).to.exist;
-          return expect(definedObj.staticMethod()).to.equal('y');
         });
         return describe('When any of the included element defines a constructor method', function() {
           return it('should be a constructor function that calls the constructor defined in the receiving obj ', function() {

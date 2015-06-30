@@ -131,6 +131,18 @@ describe 'def-inc Module', ->
         expect(definedObj.someMethod).to.exist
         expect(definedObj.someMethod()).to.equal('x')
 
+      it 'should throw an error when a constructor method is defined', ->
+        defObject = ->
+          def.defObject(constructor: -> true)
+
+        expect(defObject).to.throw(Error)
+
+      it 'should not include static attributes (classAttributes) from constructor functions/classes', ->
+        class Parent
+          @staticMethod: -> 'y'
+        definedObj = def.Object( include: [ Parent, ['!', 'constructor'] ])
+        expect(definedObj.staticMethod).to.not.exist
+
       describe 'When the accessors property is defined', ->
         describe 'In the object passed as argument to the def method (Object/Class)', ->
           definedObj = def.Object(
@@ -238,29 +250,23 @@ describe 'def-inc Module', ->
       it 'should throw an error when a constructor method is not defined', ->
         defClass = ->
           def.Class(someMethod: -> true)
-
         expect(defClass).to.throw(Error)
 
+      describe 'When class attributes (static) are defined in a parent class', ->
+        it 'should add them to the defined class as static attributes', ->
+          class Parent
+            @staticMethod: -> 'y'
 
-      it 'should include static attributes (classAttributes) from constructor functions/classes, to the resulting constructor, when one is defined', ->
-        class Parent
-          @staticMethod: -> 'y'
+          definedClass = def.Class(
+            include: [ Parent, ['!', 'attr'] ]
+            constructor:-> true
+          )
 
-        definedClass = def.Class(
-          include: [ Parent ]
-          constructor:-> true
-        )
-        instanceOfBaked = new definedClass
-        expect(instanceOfBaked.staticMethod).to.exist
-        expect(instanceOfBaked.staticMethod()).to.equal('y')
+          expect(definedClass.staticMethod).to.exist
+          expect(definedClass.staticMethod()).to.equal('y')
 
-      it 'should not include static attributes (classAttributes) from constructor functions/classes, when a constructor is not defined', ->
-        class Parent
-          @staticMethod: -> 'y'
-
-        definedObj = def.Object( include: [ Parent, ['!', 'constructor'] ])
-        expect(definedObj.staticMethod).to.exist
-        expect(definedObj.staticMethod()).to.equal('y')
+          instanceOfBaked = new definedClass
+          expect(instanceOfBaked.staticMethod).to.not.exist
 
       describe 'When any of the included element defines a constructor method', ->
         it 'should be a constructor function that calls the constructor defined in the receiving obj ', ->
