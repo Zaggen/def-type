@@ -59,6 +59,8 @@ defIncModule =
             else if _.isObject(attr) and key isnt '_super'
               newObj[key] = _.merge(newObj[key], attr)
 
+      # Once done with all attributes, we check for static properties
+      if baseObj.__static__? then @_pushStaticMethods(baseObj)
 
     @_freezeAndHideAttr(newObj, '_super')
     if type is 'class'
@@ -106,8 +108,14 @@ defIncModule =
         # to an empty object. Then we add a constructor property to this new obj, so inheriting from "classes", will
         # always result in objects with constructors as one of their keys, unless is specifically excluded by the caller.
         fn = arg
-        obj = _.merge({}, fn, fn::)
+        #obj = _.merge({}, fn, fn::)
+        obj = _.merge({}, fn::)
         obj.constructor = fn
+        Object.defineProperty obj,
+          '__static__',
+          value: _.merge({}, fn)
+          enumerable: false
+
         @baseObjs.push(obj)
       else
         # If it is a simple object we just add it to our array
@@ -217,18 +225,24 @@ defIncModule =
           # When no options provided is the same as include all, so we never skip
           return false
 
+  _pushStaticMethods: (baseObj)->
+    for own key, attr of baseObj.__static__
+      unless @_filter.skip(key)
+        @staticMethods[key] = attr
+
   _freezeAndHideAttr: (obj, attributeName)->
     if obj[attributeName]?
       Object.defineProperty obj, attributeName, {enumerable: false}
       Object.freeze obj[attributeName]
 
   _makeConstructor: (obj)->
-    fn = obj.constructor
-    fn.prototype = obj
+    classFn = obj.constructor
+    _.merge(classFn, @staticMethods)
+    classFn.prototype = obj
     #fn.prototype.constructor = fn # This creates a circular reference, should check soon
 
     #console.log 'fn', fn.prototype
-    return fn
+    return classFn
 
 module.exports = {
   Object: (obj)->

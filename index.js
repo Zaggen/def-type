@@ -69,6 +69,9 @@
             }
           }
         }
+        if (baseObj.__static__ != null) {
+          this._pushStaticMethods(baseObj);
+        }
       }
       this._freezeAndHideAttr(newObj, '_super');
       if (type === 'class') {
@@ -117,8 +120,12 @@
             return _this.options.push(_this._makeOptionsObj(arg));
           } else if (_.isFunction(arg)) {
             fn = arg;
-            obj = _.merge({}, fn, fn.prototype);
+            obj = _.merge({}, fn.prototype);
             obj.constructor = fn;
+            Object.defineProperty(obj, '__static__', {
+              value: _.merge({}, fn),
+              enumerable: false
+            });
             return _this.baseObjs.push(obj);
           } else {
             return _this.baseObjs.push(arg);
@@ -246,6 +253,21 @@
         }
       }
     },
+    _pushStaticMethods: function(baseObj) {
+      var attr, key, ref, results;
+      ref = baseObj.__static__;
+      results = [];
+      for (key in ref) {
+        if (!hasProp.call(ref, key)) continue;
+        attr = ref[key];
+        if (!this._filter.skip(key)) {
+          results.push(this.staticMethods[key] = attr);
+        } else {
+          results.push(void 0);
+        }
+      }
+      return results;
+    },
     _freezeAndHideAttr: function(obj, attributeName) {
       if (obj[attributeName] != null) {
         Object.defineProperty(obj, attributeName, {
@@ -255,10 +277,11 @@
       }
     },
     _makeConstructor: function(obj) {
-      var fn;
-      fn = obj.constructor;
-      fn.prototype = obj;
-      return fn;
+      var classFn;
+      classFn = obj.constructor;
+      _.merge(classFn, this.staticMethods);
+      classFn.prototype = obj;
+      return classFn;
     }
   };
 
