@@ -227,13 +227,13 @@ describe 'def-inc Module', ->
 
     describe.only 'def.Class method', ->
 
-      ###it 'should define a js "Class" when a constructor method is defined', ->
+      it 'should define a js "Class" when a constructor method is defined', ->
         definedClass = def.Class(
           constructor:-> true
         )
 
         expect(definedClass).to.be.a('function')
-        expect(new definedClass).to.be.an('object')###
+        expect(new definedClass).to.be.an('object')
 
       it.only 'should throw an error when a constructor method is not defined', ->
         defClass = ->

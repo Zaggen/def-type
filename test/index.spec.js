@@ -352,15 +352,16 @@
         });
       });
       return describe.only('def.Class method', function() {
-
-        /*it 'should define a js "Class" when a constructor method is defined', ->
-          definedClass = def.Class(
-            constructor:-> true
-          )
-        
-          expect(definedClass).to.be.a('function')
-          expect(new definedClass).to.be.an('object')
-         */
+        it('should define a js "Class" when a constructor method is defined', function() {
+          var definedClass;
+          definedClass = def.Class({
+            constructor: function() {
+              return true;
+            }
+          });
+          expect(definedClass).to.be.a('function');
+          return expect(new definedClass).to.be.an('object');
+        });
         it.only('should throw an error when a constructor method is not defined', function() {
           var defClass;
           defClass = function() {
