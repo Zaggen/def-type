@@ -41,7 +41,7 @@ accountTraits = def.Object({
 You can inherit from multiple "Clases" or objects, or a mixture of both. 
 ```coffeescript
 Admin = def.Class(
-  include_: [ accountTraits, ['logIn', 'logOut'],  User, ['*'] ]
+  include: [ accountTraits, ['logIn', 'logOut'],  User, ['*'] ]
   constructor: (@name)->
     @privileges = 'all'
   deleteUser: ->
@@ -90,7 +90,7 @@ zaggen.dbQuery('delete',5) # Won't work
 user = def.Object ->
   name = 'John'
   lastName =  'Doe'
-  @accessors_ = ['fullName'] # Add the names of the properties that you want to define as accessors
+  @accessors = ['fullName'] # Add the names of the properties that you want to define as accessors
   @fullName =
     get: -> "#{name} #{lastName}"
     set: (fullName)->
@@ -151,7 +151,7 @@ killable =
     #Set hp to 0, and show dead animation
 
 Player = def.Class(
-  include_: [ gameCharacter, ['~lvlUp'], killable, ['kill'] ]
+  include: [ gameCharacter, ['~lvlUp'], killable, ['kill'] ]
   constructor: (playerName)->
     @msg = "#{playerName} is ready to kill some goblins!"
   sayMsg: ->
