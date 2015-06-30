@@ -256,11 +256,7 @@
     },
     _makeConstructor: function(obj) {
       var fn;
-      fn = function() {
-        var args;
-        args = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-        return obj.constructor.apply(this, args);
-      };
+      fn = obj.constructor;
       fn.prototype = obj;
       return fn;
     }

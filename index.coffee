@@ -223,8 +223,7 @@ defIncModule =
       Object.freeze obj[attributeName]
 
   _makeConstructor: (obj)->
-    fn = (args...)->
-      obj.constructor.apply(this, args)
+    fn = obj.constructor
     fn.prototype = obj
     #fn.prototype.constructor = fn # This creates a circular reference, should check soon
 
