@@ -22,7 +22,7 @@ defIncModule =
     newObjAtrrs = _.mapValues(obj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
     # Filter(separates) parentObjects/classes from configurations arrays
 
-    ###@_checkIfValid(obj, type)###
+    @_checkIfValid(obj, type)
 
     reservedKeys = ['include', 'prototype', 'accessors']
     for key, attr of obj
@@ -67,7 +67,10 @@ defIncModule =
       return newObj
 
   _checkIfValid: (obj, type)->
+
     hasConstructor = obj.hasOwnProperty('constructor')
+
+    #throw new Error 'Invalid Setup for ' + hasConstructor
 
     if type is 'object' and  hasConstructor
       msg = '''
@@ -76,7 +79,7 @@ defIncModule =
             defining an object
             '''
       throw new Error msg
-    else if type is 'class' and hasConstructor
+    else if type is 'class' and not hasConstructor
       msg 'No constructor defined in the object. To create a class a constructor must be defined as a key'
       throw new Error msg
 

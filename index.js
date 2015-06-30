@@ -25,8 +25,7 @@
       newObjAtrrs = _.mapValues(obj, function(val) {
         return true;
       });
-
-      /*@_checkIfValid(obj, type) */
+      this._checkIfValid(obj, type);
       reservedKeys = ['include', 'prototype', 'accessors'];
       for (key in obj) {
         attr = obj[key];
@@ -84,7 +83,7 @@
       if (type === 'object' && hasConstructor) {
         msg = 'Constructor is a reserved keyword, to define classes\nwhen using def.Class method, but you are\ndefining an object';
         throw new Error(msg);
-      } else if (type === 'class' && hasConstructor) {
+      } else if (type === 'class' && !hasConstructor) {
         msg('No constructor defined in the object. To create a class a constructor must be defined as a key');
         throw new Error(msg);
       }
