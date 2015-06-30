@@ -351,9 +351,29 @@
           });
         });
       });
-      return describe('def.Class method defines a Class/Type/Constructor that can inherit attributes from multiple objects/classes', function() {
+      return describe.only('def.Class method', function() {
+
+        /*it 'should define a js "Class" when a constructor method is defined', ->
+          definedClass = def.Class(
+            constructor:-> true
+          )
+        
+          expect(definedClass).to.be.a('function')
+          expect(new definedClass).to.be.an('object')
+         */
+        it.only('should throw an error when a constructor method is not defined', function() {
+          var defClass;
+          defClass = function() {
+            return def.Class({
+              someMethod: function() {
+                return true;
+              }
+            });
+          };
+          return expect(defClass).to["throw"](Error);
+        });
         it('should include static attributes (classAttributes) from constructor functions/classes, to the resulting constructor, when one is defined', function() {
-          var Parent, definedObj, instanceOfBaked;
+          var Parent, definedClass, instanceOfBaked;
           Parent = (function() {
             function Parent() {}
 
@@ -364,13 +384,13 @@
             return Parent;
 
           })();
-          definedObj = def.Class({
+          definedClass = def.Class({
             include: [Parent],
             constructor: function() {
               return true;
             }
           });
-          instanceOfBaked = new definedObj;
+          instanceOfBaked = new definedClass;
           expect(instanceOfBaked.staticMethod).to.exist;
           return expect(instanceOfBaked.staticMethod()).to.equal('y');
         });
