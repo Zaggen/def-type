@@ -15,38 +15,38 @@
     * @param {string} type
     * @return {object|function}
      */
-    def: function(propsDefiner, type) {
+    define: function(propsDefiner, type) {
       var attr, baseObj, definedObj, i, j, key, len, ref;
       if (type == null) {
         type = 'object';
       }
-      definedObj = this._setObj(propsDefiner, type);
+      definedObj = this.setObj(propsDefiner, type);
       ref = this.baseObjs;
       for (i = j = 0, len = ref.length; j < len; i = ++j) {
         baseObj = ref[i];
-        this._filter.set(this.options[i]);
+        this.filter.set(this.options[i]);
         for (key in baseObj) {
           if (!hasProp.call(baseObj, key)) continue;
           attr = baseObj[key];
-          if (!this._filter.skip(key)) {
+          if (!this.filter.skip(key)) {
             if (_.isFunction(attr)) {
-              this._addMethod(definedObj, key, attr, baseObj);
+              this.addMethod(definedObj, key, attr, baseObj);
             } else {
-              this._addAttribute(definedObj, key, attr, baseObj);
+              this.addAttribute(definedObj, key, attr);
             }
           }
         }
         if (baseObj.__static__ != null) {
-          this._pushStaticMethods(baseObj);
+          this.pushStaticMethods(baseObj);
         }
       }
-      this._freezeAndHideAttr(definedObj, '_super');
-      return this._makeType(definedObj, type);
+      this.freezeAndHideAttr(definedObj, '_super');
+      return this.makeType(definedObj, type);
     },
 
     /** @private */
-    _setObj: function(propsDefiner, type) {
-      var accessors, attr, definedObj, includedTypes, key, reservedKeys, tempObj;
+    setObj: function(propsDefiner, type) {
+      var accessors, definedObj, includedTypes;
       definedObj = {};
       if (_.isFunction(propsDefiner)) {
         propsDefiner.call(definedObj);
@@ -55,11 +55,22 @@
       }
       includedTypes = definedObj.include;
       accessors = definedObj.accessors;
-      this._checkIfValid(definedObj, type);
+      this.checkIfValid(definedObj, type);
       if (accessors != null) {
-        this._defineAccessors(definedObj, accessors);
+        this.defineAccessors(definedObj, accessors);
       }
-      this._filterArgs(includedTypes);
+      this.filterArgs(includedTypes);
+      definedObj = this.clearConfigKeys(definedObj);
+      this.definedAttrs = _.mapValues(definedObj, function(val) {
+        return true;
+      });
+      this.staticMethods = {};
+      return definedObj;
+    },
+
+    /** @private */
+    clearConfigKeys: function(definedObj) {
+      var attr, key, reservedKeys, tempObj;
       tempObj = {};
       reservedKeys = ['include', 'prototype', 'accessors'];
       for (key in definedObj) {
@@ -69,20 +80,17 @@
         }
       }
       tempObj._super = {};
-      definedObj = tempObj;
-      this._definedAttrs = _.mapValues(definedObj, function(val) {
-        return true;
-      });
-      this.staticMethods = {};
       return tempObj;
     },
-    _addMethod: function(definedObj, key, attr, baseObj) {
+
+    /** @private */
+    addMethod: function(definedObj, key, attr, baseObj) {
       var fn;
       fn = attr;
       fn = this.useParentContext.hasOwnProperty(key) ? fn.bind(baseObj) : fn;
-      if (this._definedAttrs.hasOwnProperty(key)) {
+      if (this.definedAttrs.hasOwnProperty(key)) {
         if (key === 'constructor') {
-          return this._setSuperConstructor(definedObj, fn);
+          return this.setSuperConstructor(definedObj, fn);
         } else {
           return definedObj._super[key] = fn;
         }
@@ -90,8 +98,10 @@
         return definedObj[key] = definedObj._super[key] = fn;
       }
     },
-    _addAttribute: function(definedObj, key, attr, baseObj) {
-      if (!this._definedAttrs.hasOwnProperty(key)) {
+
+    /** @private */
+    addAttribute: function(definedObj, key, attr) {
+      if (!this.definedAttrs.hasOwnProperty(key)) {
         return definedObj[key] = _.cloneDeep(attr);
       } else if (_.isArray(attr)) {
         return definedObj[key] = definedObj[key].concat(attr);
@@ -105,7 +115,7 @@
     * that the one that is supposed to be a plainObject does not have one.
     * @private
      */
-    _checkIfValid: function(obj, type) {
+    checkIfValid: function(obj, type) {
       var hasConstructor, msg;
       hasConstructor = obj.hasOwnProperty('constructor');
       if (type === 'object' && hasConstructor) {
@@ -118,7 +128,7 @@
     },
 
     /** @private */
-    _defineAccessors: function(obj, accessorsList) {
+    defineAccessors: function(obj, accessorsList) {
       var j, len, propertyName, results;
       results = [];
       for (j = 0, len = accessorsList.length; j < len; j++) {
@@ -132,7 +142,7 @@
     * @TODO Needs to support multiple constructor calling
     * @private
      */
-    _setSuperConstructor: function(target, constructor) {
+    setSuperConstructor: function(target, constructor) {
       return target._super.constructor = function() {
         var superArgs;
         superArgs = 1 <= arguments.length ? slice.call(arguments, 0) : [];
@@ -141,7 +151,7 @@
     },
 
     /** @private */
-    _filterArgs: function(args) {
+    filterArgs: function(args) {
       this.baseObjs = [];
       this.options = [];
       this.useParentContext = {};
@@ -150,8 +160,8 @@
           var fn, obj;
           if (!_.isObject(arg)) {
             throw new Error('BakeIn only accepts objects/arrays/fns e.g (fn/{} parent objects/classes or an [] with options)');
-          } else if (_this._isOptionArr(arg)) {
-            return _this.options.push(_this._makeOptionsObj(arg));
+          } else if (_this.isOptionArr(arg)) {
+            return _this.options.push(_this.makeOptionsObj(arg));
           } else if (_.isFunction(arg)) {
             fn = arg;
             obj = _.merge({}, fn.prototype);
@@ -169,7 +179,7 @@
     },
 
     /** @private */
-    _isOptionArr: function(arg) {
+    isOptionArr: function(arg) {
       var isStringsArray;
       if (_.isArray(arg)) {
         isStringsArray = _.every(arg, function(item) {
@@ -190,14 +200,14 @@
     },
 
     /** @private */
-    _makeOptionsObj: function(attrNames) {
+    makeOptionsObj: function(attrNames) {
       var filterKey;
       filterKey = attrNames[0];
       switch (filterKey) {
         case '!':
           if (attrNames[1] != null) {
             attrNames.shift();
-            attrNames = this._filterParentContextFlag(attrNames, true);
+            attrNames = this.filterParentContextFlag(attrNames, true);
             return {
               'exclude': attrNames
             };
@@ -212,7 +222,7 @@
             'includeAll': true
           };
         default:
-          attrNames = this._filterParentContextFlag(attrNames);
+          attrNames = this.filterParentContextFlag(attrNames);
           return {
             'include': attrNames
           };
@@ -220,7 +230,7 @@
     },
 
     /** @private */
-    _filterParentContextFlag: function(attrNames, warningOnMatch) {
+    filterParentContextFlag: function(attrNames, warningOnMatch) {
       var attrName, j, len, newAttrNames;
       newAttrNames = [];
       for (j = 0, len = attrNames.length; j < len; j++) {
@@ -242,7 +252,7 @@
     /**
     @private
      */
-    _checkForBalance: function(baseObjs, options) {
+    checkForBalance: function(baseObjs, options) {
       if (options.length > 0 && baseObjs.length !== options.length) {
         throw new Error('Invalid number of conf-options: If you provide a conf obj, you must provide one for each baseObj');
       }
@@ -254,7 +264,7 @@
     * the filter provided and the current key.
     * @private
      */
-    _filter: {
+    filter: {
       set: function(conf) {
         if (conf != null) {
           this.mode = _.keys(conf)[0];
@@ -305,14 +315,14 @@
     },
 
     /** @private */
-    _pushStaticMethods: function(baseObj) {
+    pushStaticMethods: function(baseObj) {
       var attr, key, ref, results;
       ref = baseObj.__static__;
       results = [];
       for (key in ref) {
         if (!hasProp.call(ref, key)) continue;
         attr = ref[key];
-        if (!this._filter.skip(key)) {
+        if (!this.filter.skip(key)) {
           results.push(this.staticMethods[key] = attr);
         } else {
           results.push(void 0);
@@ -322,7 +332,7 @@
     },
 
     /** @private */
-    _freezeAndHideAttr: function(obj, attributeName) {
+    freezeAndHideAttr: function(obj, attributeName) {
       if (obj[attributeName] != null) {
         Object.defineProperty(obj, attributeName, {
           enumerable: false
@@ -336,16 +346,16 @@
     * it returns the currently defined object as it is (when type is 'object')
     * @private
      */
-    _makeType: function(definedObj, type) {
+    makeType: function(definedObj, type) {
       if (type === 'class') {
-        return this._makeConstructor(definedObj);
+        return this.makeConstructor(definedObj);
       } else {
         return definedObj;
       }
     },
 
     /** @private */
-    _makeConstructor: function(obj) {
+    makeConstructor: function(obj) {
       var classFn;
       classFn = obj.constructor;
       _.merge(classFn, this.staticMethods);
@@ -356,10 +366,10 @@
 
   module.exports = {
     Object: function(obj) {
-      return defIncModule.def.call(defIncModule, obj, 'object');
+      return defIncModule.define.call(defIncModule, obj, 'object');
     },
     Class: function(obj) {
-      return defIncModule.def.call(defIncModule, obj, 'class');
+      return defIncModule.define.call(defIncModule, obj, 'class');
     }
   };
 
