@@ -7,37 +7,20 @@
   _ = require('lodash');
 
   defIncModule = {
+
+    /**
+    * Defines a new Object or a Class that can inherit properties from other objects/classes in
+    * a composable way, i.e you can pick, omit and delegate(methods) from the parent objects.
+    * @param {object|function} propsDefiner
+    * @param {string} type
+    * @return {object|function}
+     */
     def: function(propsDefiner, type) {
-      var accessors, attr, baseObj, fn, i, includedTypes, j, key, len, newObj, newObjAtrrs, obj, ref, reservedKeys;
+      var attr, baseObj, definedObj, i, j, key, len, ref;
       if (type == null) {
         type = 'object';
       }
-      obj = {};
-      if (_.isFunction(propsDefiner)) {
-        propsDefiner.call(obj);
-      } else {
-        obj = propsDefiner;
-      }
-      includedTypes = obj.include;
-      accessors = obj.accessors;
-      newObj = {};
-      newObj._super = {};
-      newObjAtrrs = _.mapValues(obj, function(val) {
-        return true;
-      });
-      this._checkIfValid(obj, type);
-      reservedKeys = ['include', 'prototype', 'accessors'];
-      for (key in obj) {
-        attr = obj[key];
-        if (!_.contains(reservedKeys, key)) {
-          newObj[key] = attr;
-        }
-      }
-      if (accessors != null) {
-        this._defineAccessors(newObj, accessors);
-      }
-      this._filterArgs(includedTypes);
-      this.staticMethods = {};
+      definedObj = this._setObj(propsDefiner, type);
       ref = this.baseObjs;
       for (i = j = 0, len = ref.length; j < len; i = ++j) {
         baseObj = ref[i];
@@ -47,25 +30,9 @@
           attr = baseObj[key];
           if (!this._filter.skip(key)) {
             if (_.isFunction(attr)) {
-              fn = attr;
-              fn = this.useParentContext.hasOwnProperty(key) ? fn.bind(baseObj) : fn;
-              if (newObjAtrrs.hasOwnProperty(key)) {
-                if (key === 'constructor') {
-                  this._setSuperConstructor(newObj, fn);
-                } else {
-                  newObj._super[key] = fn;
-                }
-              } else {
-                newObj[key] = newObj._super[key] = fn;
-              }
+              this._addMethod(definedObj, key, attr, baseObj);
             } else {
-              if (!newObjAtrrs.hasOwnProperty(key)) {
-                newObj[key] = _.cloneDeep(attr);
-              } else if (_.isArray(attr)) {
-                newObj[key] = newObj[key].concat(attr);
-              } else if (_.isObject(attr) && key !== '_super') {
-                newObj[key] = _.merge(newObj[key], attr);
-              }
+              this._addAttribute(definedObj, key, attr, baseObj);
             }
           }
         }
@@ -73,13 +40,71 @@
           this._pushStaticMethods(baseObj);
         }
       }
-      this._freezeAndHideAttr(newObj, '_super');
-      if (type === 'class') {
-        return this._makeConstructor(newObj);
+      this._freezeAndHideAttr(definedObj, '_super');
+      return this._makeType(definedObj, type);
+    },
+
+    /** @private */
+    _setObj: function(propsDefiner, type) {
+      var accessors, attr, definedObj, includedTypes, key, reservedKeys, tempObj;
+      definedObj = {};
+      if (_.isFunction(propsDefiner)) {
+        propsDefiner.call(definedObj);
       } else {
-        return newObj;
+        definedObj = propsDefiner;
+      }
+      includedTypes = definedObj.include;
+      accessors = definedObj.accessors;
+      this._checkIfValid(definedObj, type);
+      if (accessors != null) {
+        this._defineAccessors(definedObj, accessors);
+      }
+      this._filterArgs(includedTypes);
+      tempObj = {};
+      reservedKeys = ['include', 'prototype', 'accessors'];
+      for (key in definedObj) {
+        attr = definedObj[key];
+        if (!_.contains(reservedKeys, key)) {
+          tempObj[key] = attr;
+        }
+      }
+      tempObj._super = {};
+      definedObj = tempObj;
+      this._definedAttrs = _.mapValues(definedObj, function(val) {
+        return true;
+      });
+      this.staticMethods = {};
+      return tempObj;
+    },
+    _addMethod: function(definedObj, key, attr, baseObj) {
+      var fn;
+      fn = attr;
+      fn = this.useParentContext.hasOwnProperty(key) ? fn.bind(baseObj) : fn;
+      if (this._definedAttrs.hasOwnProperty(key)) {
+        if (key === 'constructor') {
+          return this._setSuperConstructor(definedObj, fn);
+        } else {
+          return definedObj._super[key] = fn;
+        }
+      } else {
+        return definedObj[key] = definedObj._super[key] = fn;
       }
     },
+    _addAttribute: function(definedObj, key, attr, baseObj) {
+      if (!this._definedAttrs.hasOwnProperty(key)) {
+        return definedObj[key] = _.cloneDeep(attr);
+      } else if (_.isArray(attr)) {
+        return definedObj[key] = definedObj[key].concat(attr);
+      } else if (_.isObject(attr) && key !== '_super') {
+        return definedObj[key] = _.merge(definedObj[key], attr);
+      }
+    },
+
+    /**
+    * Checks if the object that is supposed to be a class has a constructor, and
+    * that the one that is supposed to be a plainObject does not have one.
+    * @private
+     */
     _checkIfValid: function(obj, type) {
       var hasConstructor, msg;
       hasConstructor = obj.hasOwnProperty('constructor');
@@ -91,6 +116,8 @@
         throw new Error(msg);
       }
     },
+
+    /** @private */
     _defineAccessors: function(obj, accessorsList) {
       var j, len, propertyName, results;
       results = [];
@@ -100,6 +127,11 @@
       }
       return results;
     },
+
+    /**
+    * @TODO Needs to support multiple constructor calling
+    * @private
+     */
     _setSuperConstructor: function(target, constructor) {
       return target._super.constructor = function() {
         var superArgs;
@@ -107,6 +139,8 @@
         return constructor.apply(superArgs.shift(), superArgs);
       };
     },
+
+    /** @private */
     _filterArgs: function(args) {
       this.baseObjs = [];
       this.options = [];
@@ -133,6 +167,8 @@
         };
       })(this));
     },
+
+    /** @private */
     _isOptionArr: function(arg) {
       var isStringsArray;
       if (_.isArray(arg)) {
@@ -152,6 +188,8 @@
         return false;
       }
     },
+
+    /** @private */
     _makeOptionsObj: function(attrNames) {
       var filterKey;
       filterKey = attrNames[0];
@@ -180,6 +218,8 @@
           };
       }
     },
+
+    /** @private */
     _filterParentContextFlag: function(attrNames, warningOnMatch) {
       var attrName, j, len, newAttrNames;
       newAttrNames = [];
@@ -198,12 +238,22 @@
       }
       return newAttrNames;
     },
+
+    /**
+    @private
+     */
     _checkForBalance: function(baseObjs, options) {
       if (options.length > 0 && baseObjs.length !== options.length) {
         throw new Error('Invalid number of conf-options: If you provide a conf obj, you must provide one for each baseObj');
       }
       return true;
     },
+
+    /**
+    * Helper obj to let us know if we should skip, based on
+    * the filter provided and the current key.
+    * @private
+     */
     _filter: {
       set: function(conf) {
         if (conf != null) {
@@ -253,6 +303,8 @@
         }
       }
     },
+
+    /** @private */
     _pushStaticMethods: function(baseObj) {
       var attr, key, ref, results;
       ref = baseObj.__static__;
@@ -268,6 +320,8 @@
       }
       return results;
     },
+
+    /** @private */
     _freezeAndHideAttr: function(obj, attributeName) {
       if (obj[attributeName] != null) {
         Object.defineProperty(obj, attributeName, {
@@ -276,6 +330,21 @@
         return Object.freeze(obj[attributeName]);
       }
     },
+
+    /**
+    * Makes a pseudoClass (Constructor) and returns it when type is 'class' or
+    * it returns the currently defined object as it is (when type is 'object')
+    * @private
+     */
+    _makeType: function(definedObj, type) {
+      if (type === 'class') {
+        return this._makeConstructor(definedObj);
+      } else {
+        return definedObj;
+      }
+    },
+
+    /** @private */
     _makeConstructor: function(obj) {
       var classFn;
       classFn = obj.constructor;

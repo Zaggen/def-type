@@ -1,79 +1,101 @@
 _= require('lodash')
 
-# Takes 0 or more objects to extend/enhance a target object with their attributes.
-# Lets you set which attributes to inherit, by passing an array for each object to inherit:
-# - You can pass lets say 3 objects, and then 3 config arrays like this:
-#   bakeIn(obj1, obj2, obj3, ['attr1'], ['*'], ['!', 'attr2'], targetObj), or you can pass it like this:
-#   bakeIn(obj1, ['attr1'], obj2, ['*'], obj3, ['attr2'], targetObj), it doesn't matter if you mix them up,
-#   but the order and quantity of conf arrays must match the order and quantity of parentObjects.
 defIncModule =
+  ###*
+  * Defines a new Object or a Class that can inherit properties from other objects/classes in
+  * a composable way, i.e you can pick, omit and delegate(methods) from the parent objects.
+  * @param {object|function} propsDefiner
+  * @param {string} type
+  * @return {object|function}
+  ###
   def: (propsDefiner, type = 'object')->
-    obj = {}
-    if _.isFunction(propsDefiner)
-      propsDefiner.call(obj)
-    else
-      obj = propsDefiner
-
-    includedTypes = obj.include
-    # prototype = obj.prototype # Not used yet
-    accessors = obj.accessors
-    newObj = {}
-    newObj._super = {}
-    newObjAtrrs = _.mapValues(obj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
-    # Filter(separates) parentObjects/classes from configurations arrays
-
-    @_checkIfValid(obj, type)
-
-    reservedKeys = ['include', 'prototype', 'accessors']
-    for key, attr of obj
-      unless _.contains(reservedKeys, key)
-        newObj[key] = attr
-
-    if accessors?
-      @_defineAccessors(newObj, accessors)
-
-    @_filterArgs(includedTypes)
-    @staticMethods = {}
+    definedObj = @_setObj(propsDefiner, type)
 
     for baseObj, i in @baseObjs
       @_filter.set(@options[i])
+      # Checks each propertie and compares it against the defined (or default) filters
+      # and when they are not skipped by the filter it adds them to the defined object
       for own key, attr of baseObj
         unless @_filter.skip(key)
           if _.isFunction(attr)
-            fn = attr
-            fn = if @useParentContext.hasOwnProperty(key) then fn.bind(baseObj) else fn
-            if newObjAtrrs.hasOwnProperty(key)
-              if key is 'constructor'
-                @_setSuperConstructor(newObj, fn)
-              else
-                newObj._super[key] = fn
-            else
-              newObj[key] = newObj._super[key] = fn
+            @_addMethod(definedObj, key, attr, baseObj)
           else
-            # We check if the receiving object already has an attribute with that keyName
-            # if none is found or the attr is an array/obj we concat/merge it
-            if not newObjAtrrs.hasOwnProperty(key)
-              newObj[key] = _.cloneDeep(attr)
-            else if _.isArray(attr)
-              newObj[key] = newObj[key].concat(attr)
-            else if _.isObject(attr) and key isnt '_super'
-              newObj[key] = _.merge(newObj[key], attr)
+            @_addAttribute(definedObj, key, attr, baseObj)
 
-      # Once done with all attributes, we check for static properties
+      # Once we are done with all attributes, we check for any static property
+      # to add to our static properties object
       if baseObj.__static__? then @_pushStaticMethods(baseObj)
 
-    @_freezeAndHideAttr(newObj, '_super')
-    if type is 'class'
-      return @_makeConstructor(newObj)
+    @_freezeAndHideAttr(definedObj, '_super')
+
+    # Returns a pseudo-class or the currently defined object
+    return @_makeType(definedObj, type)
+
+  ###* @private ###
+  _setObj: (propsDefiner, type)->
+    definedObj = {}
+    if _.isFunction(propsDefiner)
+      propsDefiner.call(definedObj)
     else
-      return newObj
+      definedObj = propsDefiner
 
+
+    includedTypes = definedObj.include
+    #prototype = definedObj.prototype # Not used yet
+    accessors = definedObj.accessors
+
+    @_checkIfValid(definedObj, type)
+
+    if accessors?
+      @_defineAccessors(definedObj, accessors)
+
+    # Filter(separates) parentObjects/classes from configurations arrays
+    @_filterArgs(includedTypes)
+
+    tempObj = {}
+    reservedKeys = ['include', 'prototype', 'accessors']
+    for key, attr of definedObj
+      unless _.contains(reservedKeys, key)
+        tempObj[key] = attr
+
+    tempObj._super = {}
+
+    definedObj = tempObj
+
+    @_definedAttrs = _.mapValues(definedObj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
+
+    @staticMethods = {}
+
+    return tempObj
+
+  _addMethod: (definedObj, key, attr, baseObj)->
+    fn = attr
+    fn = if @useParentContext.hasOwnProperty(key) then fn.bind(baseObj) else fn
+    if @_definedAttrs.hasOwnProperty(key)
+      if key is 'constructor'
+        @_setSuperConstructor(definedObj, fn)
+      else
+        definedObj._super[key] = fn
+    else
+      definedObj[key] = definedObj._super[key] = fn
+
+  _addAttribute: (definedObj, key, attr, baseObj)->
+    # We check if the receiving object already has an attribute with that keyName
+    # if none is found or the attr is an array/obj we concat/merge it
+    if not @_definedAttrs.hasOwnProperty(key)
+      definedObj[key] = _.cloneDeep(attr)
+    else if _.isArray(attr)
+      definedObj[key] = definedObj[key].concat(attr)
+    else if _.isObject(attr) and key isnt '_super'
+      definedObj[key] = _.merge(definedObj[key], attr)
+
+  ###*
+  * Checks if the object that is supposed to be a class has a constructor, and
+  * that the one that is supposed to be a plainObject does not have one.
+  * @private
+  ###
   _checkIfValid: (obj, type)->
-
     hasConstructor = obj.hasOwnProperty('constructor')
-
-    #throw new Error 'Invalid Setup for ' + hasConstructor
-
     if type is 'object' and  hasConstructor
       msg = '''
             Constructor is a reserved keyword, to define classes
@@ -85,14 +107,20 @@ defIncModule =
       msg 'No constructor defined in the object. To create a class a constructor must be defined as a key'
       throw new Error msg
 
+  ###* @private ###
   _defineAccessors: (obj, accessorsList)->
     for propertyName in accessorsList
       Object.defineProperty(obj, propertyName, obj[propertyName])
 
+  ###*
+  * @TODO Needs to support multiple constructor calling
+  * @private
+  ###
   _setSuperConstructor: (target, constructor)->
     target._super.constructor = (superArgs...)-> constructor.apply(superArgs.shift(), superArgs)
 
   # Filters from the arguments the base objects/classes and the option filter arrays
+  ###* @private ###
   _filterArgs: (args)->
     @baseObjs = []
     @options = []
@@ -121,7 +149,7 @@ defIncModule =
         # If it is a simple object we just add it to our array
         @baseObjs.push(arg)
 
-
+  ###* @private ###
   _isOptionArr: (arg)->
     if _.isArray arg
       isStringsArray =  _.every( arg, (item)-> if _.isString item then true else false )
@@ -132,6 +160,7 @@ defIncModule =
     else
       return false
 
+  ###* @private ###
   _makeOptionsObj: (attrNames)->
     filterKey = attrNames[0]
     switch filterKey
@@ -151,6 +180,8 @@ defIncModule =
   # Checks for ~ flag in each attribute name... e.g ['~methodName'], even though we check this for all
   # attributes in the list, it will only work when including method names. It won't work with excludes,
   # regular attributes
+
+  ###* @private ###
   _filterParentContextFlag: (attrNames, warningOnMatch)->
     newAttrNames = []
     for attrName in attrNames
@@ -164,13 +195,19 @@ defIncModule =
         newAttrNames.push(attrName)
     return newAttrNames
 
+  ###*
+  @private
+  ###
   _checkForBalance: (baseObjs, options)->
     if options.length > 0 and baseObjs.length isnt options.length
       throw new Error 'Invalid number of conf-options: If you provide a conf obj, you must provide one for each baseObj'
     return true
 
-  # Helper obj to let us know if we should skip, based on
-  # the bakeIn filter provided and the current key
+  ###*
+  * Helper obj to let us know if we should skip, based on
+  * the filter provided and the current key.
+  * @private
+  ###
   _filter:
     set: (conf)->
       if conf?
@@ -225,23 +262,32 @@ defIncModule =
           # When no options provided is the same as include all, so we never skip
           return false
 
+  ###* @private ###
   _pushStaticMethods: (baseObj)->
     for own key, attr of baseObj.__static__
       unless @_filter.skip(key)
         @staticMethods[key] = attr
 
+  ###* @private ###
   _freezeAndHideAttr: (obj, attributeName)->
     if obj[attributeName]?
       Object.defineProperty obj, attributeName, {enumerable: false}
       Object.freeze obj[attributeName]
 
+  ###*
+  * Makes a pseudoClass (Constructor) and returns it when type is 'class' or
+  * it returns the currently defined object as it is (when type is 'object')
+  * @private
+  ###
+  _makeType: (definedObj, type)->
+    if type is 'class' then @_makeConstructor(definedObj) else definedObj
+
+  ###* @private ###
   _makeConstructor: (obj)->
     classFn = obj.constructor
     _.merge(classFn, @staticMethods)
     classFn.prototype = obj
     #fn.prototype.constructor = fn # This creates a circular reference, should check soon
-
-    #console.log 'fn', fn.prototype
     return classFn
 
 module.exports = {
