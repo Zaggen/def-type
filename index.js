@@ -281,10 +281,17 @@
     /** @private */
     freezeAndHideAttr: function(obj, attributeName) {
       if (obj[attributeName] != null) {
-        Object.defineProperty(obj, attributeName, {
+        this.nonEnumAtrr(obj, attributeName);
+        return Object.freeze(obj[attributeName]);
+      }
+    },
+
+    /** @private */
+    nonEnumAtrr: function(obj, attributeName) {
+      if (obj[attributeName] != null) {
+        return Object.defineProperty(obj, attributeName, {
           enumerable: false
         });
-        return Object.freeze(obj[attributeName]);
       }
     },
 
@@ -317,7 +324,8 @@
     },
     Class: function(obj) {
       return defIncModule.define.call(defIncModule, obj, 'class');
-    }
+    },
+    configure: function() {}
   };
 
 }).call(this);

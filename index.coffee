@@ -203,8 +203,13 @@ defIncModule =
   ###* @private ###
   freezeAndHideAttr: (obj, attributeName)->
     if obj[attributeName]?
-      Object.defineProperty obj, attributeName, {enumerable: false}
+      @nonEnumAtrr(obj, attributeName)
       Object.freeze obj[attributeName]
+
+  ###* @private ###
+  nonEnumAtrr: (obj, attributeName)->
+    if obj[attributeName]?
+      Object.defineProperty obj, attributeName, {enumerable: false}
 
   ###*
   * Makes a pseudoClass (Constructor) and returns it when type is 'class' or
@@ -228,3 +233,4 @@ module.exports =
     defIncModule.define.call(defIncModule, obj, 'object')
   Class: (obj)->
     defIncModule.define.call(defIncModule, obj, 'class')
+  configure: ->
