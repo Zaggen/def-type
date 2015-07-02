@@ -66,6 +66,17 @@ describe 'def-inc Module', ->
           def.settings({nonEnumOnPrivate: false})
           expect(def.settings('nonEnumOnPrivate')).to.be.false
 
+        describe 'When passing a setting key that does not exist', ->
+          it 'should throw and error when trying to retrieve that key', ->
+            fn = ->
+              def.settings('nonExistentSetting')
+            expect(fn).to.throw(Error)
+
+          it 'should throw and error when trying to set a setting property that is not already defined', ->
+            fn = ->
+              def.settings({'nonExistentSetting': true})
+            expect(fn).to.throw(Error)
+
     describe 'The defined object', ->
 
       it 'should have all properties from the included mixins', ->

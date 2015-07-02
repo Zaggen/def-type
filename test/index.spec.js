@@ -95,11 +95,29 @@
           it('should return the current value of the specified setting', function() {
             return expect(def.settings('nonEnumOnPrivate')).to.be["true"];
           });
-          return it('should change the current settings of the overriden values', function() {
+          it('should change the current settings of the overriden values', function() {
             def.settings({
               nonEnumOnPrivate: false
             });
             return expect(def.settings('nonEnumOnPrivate')).to.be["false"];
+          });
+          return describe('When passing a setting key that does not exist', function() {
+            it('should throw and error when trying to retrieve that key', function() {
+              var fn;
+              fn = function() {
+                return def.settings('nonExistentSetting');
+              };
+              return expect(fn).to["throw"](Error);
+            });
+            return it('should throw and error when trying to set a setting property that is not already defined', function() {
+              var fn;
+              fn = function() {
+                return def.settings({
+                  'nonExistentSetting': true
+                });
+              };
+              return expect(fn).to["throw"](Error);
+            });
           });
         });
       });
