@@ -54,9 +54,17 @@ describe 'def-inc Module', ->
         expect(def.Class).to.exist
         expect(def.Class).to.be.a('function')
 
-      it 'should have a set method', ->
-        expect(def.configure).to.exist
-        expect(def.configure).to.be.a('function')
+      it 'should have a configure method', ->
+        expect(def.settings).to.exist
+        expect(def.settings).to.be.a('function')
+
+      describe 'When passing an object to the configure method', ->
+        it 'should return the current value of the specified setting', ->
+          expect(def.settings('nonEnumOnPrivate')).to.be.true
+
+        it 'should change the current settings of the overriden values', ->
+          def.settings({nonEnumOnPrivate: false})
+          expect(def.settings('nonEnumOnPrivate')).to.be.false
 
     describe 'The defined object', ->
 
@@ -208,7 +216,6 @@ describe 'def-inc Module', ->
             # Private Methods
             square = (n)-> n * n
 
-          console.log definedObj
           expect(definedObj.calculate(5)).to.equal(25)
 
       describe 'When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', ->
@@ -240,6 +247,15 @@ describe 'def-inc Module', ->
               @_super.multiply.apply(this, numbers) * 2
 
           expect(definedObj.multiply(2, 2)).to.equal(8)
+
+      describe 'When a property is defined with a leading underscore in the passed argument object/fn', ->
+        it 'should have that property marked as nonEnumerable', ->
+          definedObj = def.Object
+            calculation: (x)-> @_pseudoPrivateSquare(x)
+            _pseudoPrivateSquare: (x)-> x * x
+
+          expect(Object.keys(definedObj)).to.eql(['calculation'])
+
 
     describe 'def.Class method', ->
 

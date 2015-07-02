@@ -87,9 +87,20 @@
           expect(def.Class).to.exist;
           return expect(def.Class).to.be.a('function');
         });
-        return it('should have a set method', function() {
-          expect(def.configure).to.exist;
-          return expect(def.configure).to.be.a('function');
+        it('should have a configure method', function() {
+          expect(def.settings).to.exist;
+          return expect(def.settings).to.be.a('function');
+        });
+        return describe('When passing an object to the configure method', function() {
+          it('should return the current value of the specified setting', function() {
+            return expect(def.settings('nonEnumOnPrivate')).to.be["true"];
+          });
+          return it('should change the current settings of the overriden values', function() {
+            def.settings({
+              nonEnumOnPrivate: false
+            });
+            return expect(def.settings('nonEnumOnPrivate')).to.be["false"];
+          });
         });
       });
       describe('The defined object', function() {
@@ -318,7 +329,6 @@
                 return n * n;
               };
             });
-            console.log(definedObj);
             return expect(definedObj.calculate(5)).to.equal(25);
           });
         });
@@ -360,7 +370,7 @@
             return expect(definedObj2.multiply(5, 5)).to.equal(25);
           });
         });
-        return describe('When redefining a function in the receiving object', function() {
+        describe('When redefining a function in the receiving object', function() {
           return it('should be able to call the parent obj method via the _super obj', function() {
             var definedObj;
             definedObj = def.Object({
@@ -372,6 +382,20 @@
               }
             });
             return expect(definedObj.multiply(2, 2)).to.equal(8);
+          });
+        });
+        return describe('When a property is defined with a leading underscore in the passed argument object/fn', function() {
+          return it('should have that property marked as nonEnumerable', function() {
+            var definedObj;
+            definedObj = def.Object({
+              calculation: function(x) {
+                return this._pseudoPrivateSquare(x);
+              },
+              _pseudoPrivateSquare: function(x) {
+                return x * x;
+              }
+            });
+            return expect(Object.keys(definedObj)).to.eql(['calculation']);
           });
         });
       });
