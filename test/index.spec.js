@@ -138,21 +138,6 @@
             return expect(definedObj.preferences.autoPlay).to.be["true"];
           });
         });
-        it('should have the attributes of the last mixin that had an attr nameConflict (Override attrs in arg passing order)', function() {
-          var definedObj;
-          definedObj = def.Object({
-            include: [
-              {
-                overridden: false,
-                itemList: ['item2']
-              }, {
-                overridden: true
-              }, mixin6
-            ]
-          });
-          expect(definedObj.overridden).to.be["true"];
-          return expect(definedObj.itemList).to.deep.equal(['item5']);
-        });
         it('should only include the specified attributes from included, when an attr list [] is provided', function() {
           var definedObj;
           definedObj = def.Object({
