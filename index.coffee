@@ -2,7 +2,7 @@ _ = require('lodash')
 filter = require('./properties-filter')
 
 defIncModule =
-  settings:
+  configuration:
     nonEnumOnPrivate: true
   ###*
   * Defines a new Object or a Class that can inherit properties from other objects/classes in
@@ -246,8 +246,14 @@ module.exports =
     defIncModule.define.call(defIncModule, obj, 'object')
   Class: (obj)->
     defIncModule.define.call(defIncModule, obj, 'class')
-  settings: (conf)->
-    if _.isString(conf)
-      defIncModule.settings[conf]
-    else if _.isObject(conf)
-      _.merge(defIncModule.settings, conf)
+  settings: (newConf)->
+    conf = defIncModule.configuration
+    if _.isString(newConf)
+      key = newConf
+      if conf[key]? then conf[key] else throw new Error "Property #{key} is not a valid setting"
+    else if _.isObject(newConf)
+      for key, setting of newConf
+        if conf[key]?
+          conf[key] = setting
+        else
+          throw new Error "Property #{key} is not a valid setting"

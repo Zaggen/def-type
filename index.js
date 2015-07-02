@@ -9,7 +9,7 @@
   filter = require('./properties-filter');
 
   defIncModule = {
-    settings: {
+    configuration: {
       nonEnumOnPrivate: true
     },
 
@@ -339,11 +339,27 @@
     Class: function(obj) {
       return defIncModule.define.call(defIncModule, obj, 'class');
     },
-    settings: function(conf) {
-      if (_.isString(conf)) {
-        return defIncModule.settings[conf];
-      } else if (_.isObject(conf)) {
-        return _.merge(defIncModule.settings, conf);
+    settings: function(newConf) {
+      var conf, key, results, setting;
+      conf = defIncModule.configuration;
+      if (_.isString(newConf)) {
+        key = newConf;
+        if (conf[key] != null) {
+          return conf[key];
+        } else {
+          throw new Error("Property " + key + " is not a valid setting");
+        }
+      } else if (_.isObject(newConf)) {
+        results = [];
+        for (key in newConf) {
+          setting = newConf[key];
+          if (conf[key] != null) {
+            results.push(conf[key] = setting);
+          } else {
+            throw new Error("Property " + key + " is not a valid setting");
+          }
+        }
+        return results;
       }
     }
   };
