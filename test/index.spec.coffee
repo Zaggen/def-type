@@ -77,15 +77,6 @@ describe 'def-inc Module', ->
           # Lets reset mixin5
           mixin5.preferences = {fullScreen: true}
 
-      ### TODO: Check if this is a desired behavior, it might be better to have these attributes merged###
-      xit 'should not clone an attribute from a base object if its being defined in the obj passed to def.Object', ->
-        definedObj = def.Object
-          include: [mixin5, mixin6]
-          increaseByOne: (n)->  @sum(n, 1)
-          itemList: ['item5']
-
-        expect(definedObj.enable).to.be.false
-
       describe 'When the included mixins or the currently defined Object/Class has a name conflict on an attribute(data)', ->
         it 'should merge them with the following precedence:
             From left to right in the included mixins list, being the last one the one with more precedence,

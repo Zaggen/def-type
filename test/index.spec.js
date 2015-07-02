@@ -121,19 +121,6 @@
             };
           });
         });
-
-        /* TODO: Check if this is a desired behavior, it might be better to have these attributes merged */
-        xit('should not clone an attribute from a base object if its being defined in the obj passed to def.Object', function() {
-          var definedObj;
-          definedObj = def.Object({
-            include: [mixin5, mixin6],
-            increaseByOne: function(n) {
-              return this.sum(n, 1);
-            },
-            itemList: ['item5']
-          });
-          return expect(definedObj.enable).to.be["false"];
-        });
         describe('When the included mixins or the currently defined Object/Class has a name conflict on an attribute(data)', function() {
           return it('should merge them with the following precedence: From left to right in the included mixins list, being the last one the one with more precedence, only surpassed by the attribute defined in the current Object/Class itself', function() {
             var definedObj;
