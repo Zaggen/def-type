@@ -2,6 +2,8 @@ _ = require('lodash')
 filter = require('./properties-filter')
 
 defIncModule =
+  settings:
+    nonEnumOnPrivate: true
   ###*
   * Defines a new Object or a Class that can inherit properties from other objects/classes in
   * a composable way, i.e you can pick, omit and delegate(methods) from the parent objects.
@@ -15,18 +17,22 @@ defIncModule =
       filter.set(@options[i])
       # Checks each propertie and compares it against the defined (or default) filters
       # and when they are not skipped by the filter it adds them to the defined object
-      for own key, attr of mixin
-        unless filter.skip(key)
-          if _.isFunction(attr)
-            @addMethod(definedObj, key, attr, mixin)
+
+      propertyNames = Object.getOwnPropertyNames(mixin)
+      for propertyName in propertyNames
+        unless filter.skip(propertyName)
+          property = mixin[propertyName]
+          if _.isFunction(property)
+            @addMethod(definedObj, propertyName, property, mixin)
           else
-            @addAttribute(definedObj, key, attr)
+            @addAttribute(definedObj, propertyName, property)
 
       # Once we are done with all attributes, we check for any static property
       # to add to our static properties object
       if mixin.__static__? then @pushStaticMethods(mixin)
 
-    @freezeAndHideAttr(definedObj, '_super')
+
+    @markPseudoPrivateAsNonEnum(definedObj)
     # Returns a pseudo-class or the currently defined object
     return @makeType(definedObj, type)
 
@@ -200,14 +206,21 @@ defIncModule =
       unless filter.skip(key)
         @staticMethods[key] = attr
 
+  markPseudoPrivateAsNonEnum: (definedObj)->
+    propertyNames = Object.getOwnPropertyNames(definedObj)
+    for propertyName in propertyNames
+      if propertyName.charAt(0) is '_'
+        @makeNonEnumProp(definedObj, propertyName)
+
+    @freezeProp(definedObj, '_super')
+
   ###* @private ###
-  freezeAndHideAttr: (obj, attributeName)->
+  freezeProp: (obj, attributeName)->
     if obj[attributeName]?
-      @nonEnumAtrr(obj, attributeName)
       Object.freeze obj[attributeName]
 
   ###* @private ###
-  nonEnumAtrr: (obj, attributeName)->
+  makeNonEnumProp: (obj, attributeName)->
     if obj[attributeName]?
       Object.defineProperty obj, attributeName, {enumerable: false}
 
@@ -233,4 +246,8 @@ module.exports =
     defIncModule.define.call(defIncModule, obj, 'object')
   Class: (obj)->
     defIncModule.define.call(defIncModule, obj, 'class')
-  configure: ->
+  settings: (conf)->
+    if _.isString(conf)
+      defIncModule.settings[conf]
+    else if _.isObject(conf)
+      _.merge(defIncModule.settings, conf)
