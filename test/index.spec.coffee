@@ -33,17 +33,17 @@ describe 'def-inc Module', ->
     _privateMethod2: (x)-> x + @_privateAttr
     _privateMethod3: (x)-> x - @_privateAttr
 
-  objWithAttrs =
+  mixin5 =
     enable: true
     preferences:
       fullScreen: true
 
-  baseObj5 =
+  mixin6 =
     increaseByOne: (n)->  @sum(n, 1)
     enable: false
     itemList: ['item5']
 
-  describe 'def.Object method define an object that can inherit attributes from multiple objects/classes', ->
+  describe 'def.Object method define an object that can inherit attributes from multiple mixins (objects/classes)', ->
 
     describe 'The def-inc module', ->
       it 'should have an Object method', ->
@@ -56,43 +56,58 @@ describe 'def-inc Module', ->
 
     describe 'The defined object', ->
 
-      it 'should have all methods from the included mixins and their original attributes', ->
-        definedObj = def.Object( include: [mixin1, mixin2, baseObj5] )
+      it 'should have all properties from the included mixins', ->
+        definedObj = def.Object( include: [mixin1, mixin2, mixin6] )
         expect(definedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList')
 
-      it 'should be able to call the included methods', ->
-        definedObj = def.Object( include: [mixin1, mixin2, baseObj5])
+      it 'should be able to call the inherited methods', ->
+        definedObj = def.Object( include: [mixin1, mixin2, mixin6])
         expect(definedObj.sum(5, 10)).to.equal(15)
         expect(definedObj.increaseByOne(3)).to.equal(4)
         expect(definedObj.multiply(4, 2)).to.equal(8)
         expect(definedObj.pow(2, 3)).to.equal(9)
 
-      it 'should include(clone) attributes from the objects in the include array', ->
-        definedObj = def.Object(include: [objWithAttrs, baseObj5])
-        expect(definedObj.enable).to.exist
-        expect(definedObj.preferences.fullScreen).to.exist.and.to.be.true
-        delete objWithAttrs.preferences.fullScreen
-        expect(definedObj.preferences.fullScreen).to.exist
-        # Lets reset objWithAttrs
-        objWithAttrs.preferences = {fullScreen: true}
+      describe 'the inherited attributes(data)', ->
+        it 'should have been cloned and not just referenced', ->
+          definedObj = def.Object(include: [mixin5, mixin6])
+          delete mixin5.preferences.fullScreen
+          expect(definedObj.preferences.fullScreen).to.exist
 
+        after ->
+          # Lets reset mixin5
+          mixin5.preferences = {fullScreen: true}
 
-      it 'should not clone an attribute from a base object if its being defined in the obj passed to def.Object', ->
-        definedObj = def.Object(
-          include: [objWithAttrs]
+      ### TODO: Check if this is a desired behavior, it might be better to have these attributes merged###
+      xit 'should not clone an attribute from a base object if its being defined in the obj passed to def.Object', ->
+        definedObj = def.Object
+          include: [mixin5, mixin6]
           increaseByOne: (n)->  @sum(n, 1)
-          enable: false
           itemList: ['item5']
-        )
+
         expect(definedObj.enable).to.be.false
 
-      it 'should have the attributes of the last baseObj that had an attr nameConflict (Override attrs in arg passing order)', ->
-        definedObj = def.Object(include: [{overridden: false, itemList: ['item2']}, {overridden: true}, baseObj5])
+      describe 'When the included mixins or the currently defined Object/Class has a name conflict on an attribute(data)', ->
+        it 'should merge them with the following precedence:
+            From left to right in the included mixins list, being the last one the one with more precedence,
+            only surpassed by the attribute defined in the current Object/Class itself', ->
+
+          definedObj = def.Object
+            include: [mixin5, mixin6]
+            increaseByOne: (n)->  @sum(n, 1)
+            preferences:
+              autoPlay: true
+
+          expect(definedObj.enable).to.be.false
+          expect(definedObj.preferences.fullScreen).to.be.true
+          expect(definedObj.preferences.autoPlay).to.be.true
+
+      it 'should have the attributes of the last mixin that had an attr nameConflict (Override attrs in arg passing order)', ->
+        definedObj = def.Object(include: [{overridden: false, itemList: ['item2']}, {overridden: true}, mixin6])
         expect(definedObj.overridden).to.be.true
         expect(definedObj.itemList).to.deep.equal(['item5'])
 
-      it 'should be able to only include the specified attributes from a baked baseObject, when an attr list [] is provided', ->
-        definedObj = def.Object( include: [mixin1, ['sum'], mixin4, ['publicMethod'], baseObj5, ['*']] )
+      it 'should only include the specified attributes from included, when an attr list [] is provided', ->
+        definedObj = def.Object( include: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6, ['*']] )
         expect(definedObj.sum).to.exist
         expect(definedObj.multiply).to.not.exist
         expect(definedObj._privateAttr).to.not.exist
@@ -101,25 +116,25 @@ describe 'def-inc Module', ->
         expect(definedObj._privateMethod3).to.not.exist
 
       it 'should be able to exclude an attribute from a baked baseObject, when an "!" flag is provided e.g: ["!", "attr1", "attr2"]', ->
-        definedObj = def.Object( include: [mixin1, ['!', 'multiply'], baseObj5, ['*'] ] )
+        definedObj = def.Object( include: [mixin1, ['!', 'multiply'], mixin6, ['*'] ] )
         expect(definedObj.sum).to.exist
         expect(definedObj.multiply).to.not.exist
 
 
       it 'should include all attributes from a baked baseObject when an ["*"] (includeAll)  flag is provided', ->
-        definedObj = def.Object( include: [mixin1, ['*'], baseObj5, ['*'] ] )
+        definedObj = def.Object( include: [mixin1, ['*'], mixin6, ['*'] ] )
         expect(definedObj.sum).to.exist
         expect(definedObj.multiply).to.exist
         expect(definedObj.increaseByOne).to.exist
 
       it 'should exclude all attributes from a baked baseObject when an ["!"] (excludeAll) flag is provided', ->
-        definedObj = def.Object( include: [mixin1, ['!'], baseObj5, ['*'] ] )
+        definedObj = def.Object( include: [mixin1, ['!'], mixin6, ['*'] ] )
         expect(definedObj.sum).to.not.exist
         expect(definedObj.multiply).to.not.exist
         expect(definedObj.increaseByOne).to.exist
 
       it 'should have the _.super property hidden and frozen (non: enumerable, configurable, writable)', ->
-        definedObj = def.Object( include: [mixin1, baseObj5, ['*']])
+        definedObj = def.Object( include: [mixin1, mixin6, ['*']])
         expect(definedObj.propertyIsEnumerable('_super')).to.be.false
         expect(Object.isFrozen(definedObj._super)).to.be.true
 
@@ -127,7 +142,7 @@ describe 'def-inc Module', ->
         class Parent
           someMethod: -> 'x'
 
-        definedObj = def.Object( include: [ Parent, ['!', 'constructor'], baseObj5, ['*'] ] )
+        definedObj = def.Object( include: [ Parent, ['!', 'constructor'], mixin6, ['*'] ] )
         expect(definedObj.someMethod).to.exist
         expect(definedObj.someMethod()).to.equal('x')
 
