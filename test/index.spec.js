@@ -83,9 +83,13 @@
           expect(def.Object).to.exist;
           return expect(def.Object).to.be.a('function');
         });
-        return it('should have a Class method', function() {
+        it('should have a Class method', function() {
           expect(def.Class).to.exist;
           return expect(def.Class).to.be.a('function');
+        });
+        return it('should have a set method', function() {
+          expect(def.configure).to.exist;
+          return expect(def.configure).to.be.a('function');
         });
       });
       describe('The defined object', function() {

@@ -54,6 +54,10 @@ describe 'def-inc Module', ->
         expect(def.Class).to.exist
         expect(def.Class).to.be.a('function')
 
+      it 'should have a set method', ->
+        expect(def.configure).to.exist
+        expect(def.configure).to.be.a('function')
+
     describe 'The defined object', ->
 
       it 'should have all properties from the included mixins', ->
@@ -146,7 +150,7 @@ describe 'def-inc Module', ->
 
       describe 'When the accessors property is defined', ->
         describe 'In the object passed as argument to the def method (Object/Class)', ->
-          definedObj = def.Object(
+          definedObj = def.Object
             accessors: ['fullName']
             _name: 'John'
             _lastName: 'Doe'
@@ -156,7 +160,7 @@ describe 'def-inc Module', ->
                 nameParts = fullName.split(' ')
                 @_name = nameParts[0]
                 @_lastName = nameParts[1]
-          )
+
           it 'should set the getter to the specified attribute', ->
             expect(definedObj.fullName).to.equal('John Doe')
 
@@ -230,20 +234,18 @@ describe 'def-inc Module', ->
 
       describe 'When redefining a function in the receiving object', ->
         it 'should be able to call the parent obj method via the _super obj', ->
-          definedObj = def.Object(
+          definedObj = def.Object
             include: [ mixin1 ]
             multiply: (numbers...)->
               @_super.multiply.apply(this, numbers) * 2
-          )
 
           expect(definedObj.multiply(2, 2)).to.equal(8)
 
     describe 'def.Class method', ->
 
       it 'should define a js "Class" when a constructor method is defined', ->
-        definedClass = def.Class(
+        definedClass = def.Class
           constructor:-> true
-        )
 
         expect(definedClass).to.be.a('function')
         expect(new definedClass).to.be.an('object')
@@ -258,10 +260,9 @@ describe 'def-inc Module', ->
           class Parent
             @staticMethod: -> 'y'
 
-          definedClass = def.Class(
+          definedClass = def.Class
             include: [ Parent, ['!', 'attr'] ]
             constructor:-> true
-          )
 
           expect(definedClass.staticMethod).to.exist
           expect(definedClass.staticMethod()).to.equal('y')
@@ -271,9 +272,9 @@ describe 'def-inc Module', ->
 
       describe 'When any of the included element defines a constructor method', ->
         it 'should be a constructor function that calls the constructor defined in the receiving obj ', ->
-          definedObj = def.Class(
+          definedObj = def.Class
             include: [ {constructor: (msg)-> @msg = msg} ]
             constructor: -> @_super.constructor(this, "I'm baked")
-          )
+
           instance = new definedObj("I'm baked")
           expect(instance.msg).to.equal("I'm baked")
