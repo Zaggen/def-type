@@ -92,14 +92,19 @@
           return expect(def.settings).to.be.a('function');
         });
         return describe('When passing an object to the configure method', function() {
+          after(function() {
+            return def.settings({
+              NonEnumUnderscored: true
+            });
+          });
           it('should return the current value of the specified setting', function() {
-            return expect(def.settings('nonEnumOnPrivate')).to.be["true"];
+            return expect(def.settings('NonEnumUnderscored')).to.be["true"];
           });
           it('should change the current settings of the overriden values', function() {
             def.settings({
-              nonEnumOnPrivate: false
+              NonEnumUnderscored: false
             });
-            return expect(def.settings('nonEnumOnPrivate')).to.be["false"];
+            return expect(def.settings('NonEnumUnderscored')).to.be["false"];
           });
           return describe('When passing a setting key that does not exist', function() {
             it('should throw and error when trying to retrieve that key', function() {
@@ -403,8 +408,11 @@
           });
         });
         return describe('When a property is defined with a leading underscore in the passed argument object/fn', function() {
-          return it('should have that property marked as nonEnumerable', function() {
+          it('should have that property marked as nonEnumerable', function() {
             var definedObj;
+            def.settings({
+              NonEnumUnderscored: true
+            });
             definedObj = def.Object({
               calculation: function(x) {
                 return this._pseudoPrivateSquare(x);
@@ -414,6 +422,24 @@
               }
             });
             return expect(Object.keys(definedObj)).to.eql(['calculation']);
+          });
+          return it('should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off', function() {
+            var definedObj;
+            def.settings({
+              NonEnumUnderscored: false
+            });
+            definedObj = def.Object({
+              calculation: function(x) {
+                return this._pseudoPrivateSquare(x);
+              },
+              _pseudoPrivateSquare: function(x) {
+                return x * x;
+              }
+            });
+            expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare']);
+            return def.settings({
+              NonEnumUnderscored: true
+            });
           });
         });
       });

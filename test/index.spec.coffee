@@ -59,12 +59,15 @@ describe 'def-inc Module', ->
         expect(def.settings).to.be.a('function')
 
       describe 'When passing an object to the configure method', ->
+        after ->
+          def.settings({NonEnumUnderscored: true})
+
         it 'should return the current value of the specified setting', ->
-          expect(def.settings('nonEnumOnPrivate')).to.be.true
+          expect(def.settings('NonEnumUnderscored')).to.be.true
 
         it 'should change the current settings of the overriden values', ->
-          def.settings({nonEnumOnPrivate: false})
-          expect(def.settings('nonEnumOnPrivate')).to.be.false
+          def.settings({NonEnumUnderscored: false})
+          expect(def.settings('NonEnumUnderscored')).to.be.false
 
         describe 'When passing a setting key that does not exist', ->
           it 'should throw and error when trying to retrieve that key', ->
@@ -76,6 +79,8 @@ describe 'def-inc Module', ->
             fn = ->
               def.settings({'nonExistentSetting': true})
             expect(fn).to.throw(Error)
+
+
 
     describe 'The defined object', ->
 
@@ -261,11 +266,21 @@ describe 'def-inc Module', ->
 
       describe 'When a property is defined with a leading underscore in the passed argument object/fn', ->
         it 'should have that property marked as nonEnumerable', ->
+          def.settings(NonEnumUnderscored: true)
           definedObj = def.Object
             calculation: (x)-> @_pseudoPrivateSquare(x)
             _pseudoPrivateSquare: (x)-> x * x
 
           expect(Object.keys(definedObj)).to.eql(['calculation'])
+
+        it 'should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off', ->
+          def.settings(NonEnumUnderscored: false)
+          definedObj = def.Object
+            calculation: (x)-> @_pseudoPrivateSquare(x)
+            _pseudoPrivateSquare: (x)-> x * x
+
+          expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare'])
+          def.settings(NonEnumUnderscored: true)
 
 
     describe 'def.Class method', ->
