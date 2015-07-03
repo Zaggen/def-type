@@ -2,8 +2,8 @@ _ = require('lodash')
 filter = require('./properties-filter')
 
 defIncModule =
-  configuration:
-    nonEnumOnPrivate: true
+  conf:
+    NonEnumUnderscored: true
   ###*
   * Defines a new Object or a Class that can inherit properties from other objects/classes in
   * a composable way, i.e you can pick, omit and delegate(methods) from the parent objects.
@@ -31,8 +31,8 @@ defIncModule =
       # to add to our static properties object
       if mixin.__static__? then @pushStaticMethods(mixin)
 
+    @markUnderscoredAsNonEnum(definedObj)
 
-    @markPseudoPrivateAsNonEnum(definedObj)
     # Returns a pseudo-class or the currently defined object
     return @makeType(definedObj, type)
 
@@ -206,13 +206,18 @@ defIncModule =
       unless filter.skip(key)
         @staticMethods[key] = attr
 
-  markPseudoPrivateAsNonEnum: (definedObj)->
-    propertyNames = Object.getOwnPropertyNames(definedObj)
-    for propertyName in propertyNames
-      if propertyName.charAt(0) is '_'
-        @makeNonEnumProp(definedObj, propertyName)
+  markUnderscoredAsNonEnum: (definedObj)->
+    #@conf.NonEnumUnderscored
+    if @conf.NonEnumUnderscored
+      propertyNames = Object.getOwnPropertyNames(definedObj)
+      for propertyName in propertyNames
+        if propertyName.charAt(0) is '_'
+          @defNonEnumProp(definedObj, propertyName)
+    else
+      @defNonEnumProp(definedObj, '_super')
 
     @freezeProp(definedObj, '_super')
+    return true
 
   ###* @private ###
   freezeProp: (obj, attributeName)->
@@ -220,7 +225,7 @@ defIncModule =
       Object.freeze obj[attributeName]
 
   ###* @private ###
-  makeNonEnumProp: (obj, attributeName)->
+  defNonEnumProp: (obj, attributeName)->
     if obj[attributeName]?
       Object.defineProperty obj, attributeName, {enumerable: false}
 
@@ -247,7 +252,7 @@ module.exports =
   Class: (obj)->
     defIncModule.define.call(defIncModule, obj, 'class')
   settings: (newConf)->
-    conf = defIncModule.configuration
+    conf = defIncModule.conf
     if _.isString(newConf)
       key = newConf
       if conf[key]? then conf[key] else throw new Error "Property #{key} is not a valid setting"

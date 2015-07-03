@@ -9,8 +9,8 @@
   filter = require('./properties-filter');
 
   defIncModule = {
-    configuration: {
-      nonEnumOnPrivate: true
+    conf: {
+      NonEnumUnderscored: true
     },
 
     /**
@@ -46,7 +46,7 @@
           this.pushStaticMethods(mixin);
         }
       }
-      this.markPseudoPrivateAsNonEnum(definedObj);
+      this.markUnderscoredAsNonEnum(definedObj);
       return this.makeType(definedObj, type);
     },
 
@@ -281,16 +281,21 @@
       }
       return results;
     },
-    markPseudoPrivateAsNonEnum: function(definedObj) {
+    markUnderscoredAsNonEnum: function(definedObj) {
       var j, len, propertyName, propertyNames;
-      propertyNames = Object.getOwnPropertyNames(definedObj);
-      for (j = 0, len = propertyNames.length; j < len; j++) {
-        propertyName = propertyNames[j];
-        if (propertyName.charAt(0) === '_') {
-          this.makeNonEnumProp(definedObj, propertyName);
+      if (this.conf.NonEnumUnderscored) {
+        propertyNames = Object.getOwnPropertyNames(definedObj);
+        for (j = 0, len = propertyNames.length; j < len; j++) {
+          propertyName = propertyNames[j];
+          if (propertyName.charAt(0) === '_') {
+            this.defNonEnumProp(definedObj, propertyName);
+          }
         }
+      } else {
+        this.defNonEnumProp(definedObj, '_super');
       }
-      return this.freezeProp(definedObj, '_super');
+      this.freezeProp(definedObj, '_super');
+      return true;
     },
 
     /** @private */
@@ -301,7 +306,7 @@
     },
 
     /** @private */
-    makeNonEnumProp: function(obj, attributeName) {
+    defNonEnumProp: function(obj, attributeName) {
       if (obj[attributeName] != null) {
         return Object.defineProperty(obj, attributeName, {
           enumerable: false
@@ -341,7 +346,7 @@
     },
     settings: function(newConf) {
       var conf, key, results, setting;
-      conf = defIncModule.configuration;
+      conf = defIncModule.conf;
       if (_.isString(newConf)) {
         key = newConf;
         if (conf[key] != null) {
