@@ -18,29 +18,42 @@ def = require('def-inc')
 ```
 **Class definition** (All attributes not defined in the constructor will live in the prototype obj)
 ```coffeescript
-Player = def.Class({
+Player = def.Class
   constructor: (@playerName)->
     # some code
   sayMsg: ->
     # some code
   kill: ->
     # some code
-})
+
 plyr1 = new Player('zaggen')
 ```
 **Object definition** (Pretty much the same as defining an object literal)
 ```coffeescript
-accountTraits = def.Object({
+enemyBoss = def.Object
+  killThemAll: ->
+    # some code
+  regenHpWhenAlmostDead: ->
+    # some code
+
+```
+
+**Module definition** This is exactly the same function as def.Object, it is just
+an alias to sort of create a convention of defining objects that their sole purpose
+is to be included, pretty much like ruby modules or php traits.
+```coffeescript
+accountTraits = def.Module
   logIn: (req, res)->
     # some code
   logOut: ((req, res)->
     # some code
-})
+
 ```
+
 #### Usage with multiple inheritance and defined constructor
 You can inherit from multiple "Clases" or objects, or a mixture of both. 
 ```coffeescript
-Admin = def.Class(
+Admin = def.Class
   include: [ accountTraits, ['logIn', 'logOut'],  User, ['*'] ]
   constructor: (@name)->
     @privileges = 'all'
@@ -48,7 +61,7 @@ Admin = def.Class(
     # Some Code
   modifyUser: ->
     # Some Code
-)
+
 zaggen = new Admin('zaggen')
 ```
 #### Usage with real private methods and attrs(shared)
@@ -134,7 +147,7 @@ sprite =
   update: ->
     # Updates sprite
     
-gameCharacter = def.Object(
+gameCharacter = def.Object
   include_: [movable, sprite, hardObj]
   _exp: 0
   lvlUp: (newExp)->
@@ -142,7 +155,7 @@ gameCharacter = def.Object(
     # Lvl up based on exp
     
   _increaseExp: (newExp)-> @_exp += newExp
-)
+
     
 gameCharacter.move(100, 200, 100) # Moves the character to position (100,200) in 100 milliseconds
 
@@ -172,6 +185,48 @@ zaggen.move(15, 40, 10) # Moves the character to position (15,40) in 10 millisec
 * A `_super` object is created when extending the receivingObj, it will contain all of the inherited methods into it. This is useful when you want to override an inherited parent method but you still want to use the original functionality.
 * If you provide a constructor in the receivingObj, you will get a constructor function.
 
+
+### Comming features?
+* I've been thinking in how to implement real protected(shared) methods and private instance variables
+with a nice syntax and so far i have to ideas, one involves using eval, and it'll be a little slower at definition time
+since it has to eval every method once is defined, and using this method is not possible to have instance variables with
+the same syntax. The syntax is pretty much what is on an example up there, where public methods use @ and private methods
+don't.
+
+* The other option which is more realistic and doable, and maybe performs better is something like this:
+**Object definition** (Pretty much the same as defining an object literal)
+```coffeescript
+
+Player = def.Class (pv)->
+    @include = [ AccountTraits, ['logIn'] ]
+    @constructor = (playerName)->
+      pv(@).playerName = "#{playerName}-Sama"
+      pv.each()
+
+    @sayMsg = (msg)->
+      console.log msg
+
+    @kill = ->
+      pv.calculateHp(0)
+      @sayMsg "You are dead"
+
+    pv.calculateHp = (hp)->
+      return hp
+
+    pv.beforeCreate = (values, next)->
+      values.slug = Tools.slugify(values.name)
+      next()
+
+```
+
+All pv methods are protected, meaning they can be inherited, and instance variables `pv(@)` won't be shared across
+instances, this needs weakmaps to avoid memory leaks, but if not present, it will use objects and ids internally and
+you will have to make sure to call the pv(@).__destroy__() method before removing the object.
+With this syntax we get what other languages have, you can call public methods inside private ones, since they will be
+internally bind to the public object, i won't make the public object as prototype to accomplish this since that will mess
+up with the calling of @ inside those methods.
+I'll try to work on this as soon as i have time, i think i like it better than most modules out there trying to do something
+similar, the only thing i'm not sure yet is, "is it worth it"?
 
 ## Bugs, questions, ideas?
 Hell, yeah, just open an issue and i'll try to answer ASAP. I'll appreciate any bug report with a propper way to reproduce it.
