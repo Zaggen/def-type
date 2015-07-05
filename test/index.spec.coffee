@@ -50,37 +50,41 @@ describe 'def-inc Module', ->
         expect(def.Object).to.exist
         expect(def.Object).to.be.a('function')
 
+      it 'should have an Module method', ->
+        expect(def.Module).to.exist
+        expect(def.Module).to.be.a('function')
+
       it 'should have a Class method', ->
         expect(def.Class).to.exist
         expect(def.Class).to.be.a('function')
 
-      it 'should have a configure method', ->
-        expect(def.settings).to.exist
-        expect(def.settings).to.be.a('function')
+      it 'should have a setNonEnum method', ->
+        expect(def.setNonEnum).to.exist
+        expect(def.setNonEnum).to.be.a('function')
 
-      describe 'When passing an object to the configure method', ->
+      it 'should have a getNonEnum method', ->
+        expect(def.getNonEnum).to.exist
+        expect(def.getNonEnum).to.be.a('function')
+
+      describe 'getEnum method', ->
+        it 'should return the nonEnum settings', ->
+          expect(def.getNonEnum()).to.eql({leadingChar: '_', enabled: true})
+
+      describe 'setEnum method', ->
+        describe 'when the only the first argument is passed', ->
+          it 'should set the leadingChar to whatever is passed as the first argument and the enabled status as true',->
+            def.setNonEnum('_')
+            expect(def.getNonEnum().leadingChar).to.equal('_')
+            expect(def.getNonEnum().enabled).to.be.true
+
+        describe 'when the two arguments are passed', ->
+          it 'should set the first argument as the leading char and the second as the enabled status',->
+            def.setNonEnum('$', false)
+            expect(def.getNonEnum().leadingChar).to.equal('$')
+            expect(def.getNonEnum().enabled).to.be.false
+
         after ->
-          def.settings({NonEnumUnderscored: true})
-
-        it 'should return the current value of the specified setting', ->
-          expect(def.settings('NonEnumUnderscored')).to.be.true
-
-        it 'should change the current settings of the overriden values', ->
-          def.settings({NonEnumUnderscored: false})
-          expect(def.settings('NonEnumUnderscored')).to.be.false
-
-        describe 'When passing a setting key that does not exist', ->
-          it 'should throw and error when trying to retrieve that key', ->
-            fn = ->
-              def.settings('nonExistentSetting')
-            expect(fn).to.throw(Error)
-
-          it 'should throw and error when trying to set a setting property that is not already defined', ->
-            fn = ->
-              def.settings({'nonExistentSetting': true})
-            expect(fn).to.throw(Error)
-
-
+          def.setNonEnum('_', true)
 
     describe 'The defined object', ->
 
@@ -266,22 +270,29 @@ describe 'def-inc Module', ->
 
       describe 'When a property is defined with a leading underscore in the passed argument object/fn', ->
         it 'should have that property marked as nonEnumerable', ->
-          def.settings(NonEnumUnderscored: true)
+          def.setNonEnum('_', true)
           definedObj = def.Object
             calculation: (x)-> @_pseudoPrivateSquare(x)
             _pseudoPrivateSquare: (x)-> x * x
 
           expect(Object.keys(definedObj)).to.eql(['calculation'])
 
-        it 'should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off', ->
-          def.settings(NonEnumUnderscored: false)
+        it 'should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off globally', ->
+          def.setNonEnum('_', false)
           definedObj = def.Object
             calculation: (x)-> @_pseudoPrivateSquare(x)
             _pseudoPrivateSquare: (x)-> x * x
 
           expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare'])
-          def.settings(NonEnumUnderscored: true)
+          def.setNonEnum('_', true)
 
+        it 'should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off locally', ->
+          definedObj = def.Object
+            nonEnum: ['_', false]
+            calculation: (x)-> @_pseudoPrivateSquare(x)
+            _pseudoPrivateSquare: (x)-> x * x
+
+          expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare'])
 
     describe 'def.Class method', ->
 

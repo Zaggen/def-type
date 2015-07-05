@@ -83,46 +83,47 @@
           expect(def.Object).to.exist;
           return expect(def.Object).to.be.a('function');
         });
+        it('should have an Module method', function() {
+          expect(def.Module).to.exist;
+          return expect(def.Module).to.be.a('function');
+        });
         it('should have a Class method', function() {
           expect(def.Class).to.exist;
           return expect(def.Class).to.be.a('function');
         });
-        it('should have a configure method', function() {
-          expect(def.settings).to.exist;
-          return expect(def.settings).to.be.a('function');
+        it('should have a setNonEnum method', function() {
+          expect(def.setNonEnum).to.exist;
+          return expect(def.setNonEnum).to.be.a('function');
         });
-        return describe('When passing an object to the configure method', function() {
-          after(function() {
-            return def.settings({
-              NonEnumUnderscored: true
+        it('should have a getNonEnum method', function() {
+          expect(def.getNonEnum).to.exist;
+          return expect(def.getNonEnum).to.be.a('function');
+        });
+        describe('getEnum method', function() {
+          return it('should return the nonEnum settings', function() {
+            return expect(def.getNonEnum()).to.eql({
+              leadingChar: '_',
+              enabled: true
             });
           });
-          it('should return the current value of the specified setting', function() {
-            return expect(def.settings('NonEnumUnderscored')).to.be["true"];
+        });
+        return describe('setEnum method', function() {
+          describe('when the only the first argument is passed', function() {
+            return it('should set the leadingChar to whatever is passed as the first argument and the enabled status as true', function() {
+              def.setNonEnum('_');
+              expect(def.getNonEnum().leadingChar).to.equal('_');
+              return expect(def.getNonEnum().enabled).to.be["true"];
+            });
           });
-          it('should change the current settings of the overriden values', function() {
-            def.settings({
-              NonEnumUnderscored: false
+          describe('when the two arguments are passed', function() {
+            return it('should set the first argument as the leading char and the second as the enabled status', function() {
+              def.setNonEnum('$', false);
+              expect(def.getNonEnum().leadingChar).to.equal('$');
+              return expect(def.getNonEnum().enabled).to.be["false"];
             });
-            return expect(def.settings('NonEnumUnderscored')).to.be["false"];
           });
-          return describe('When passing a setting key that does not exist', function() {
-            it('should throw and error when trying to retrieve that key', function() {
-              var fn;
-              fn = function() {
-                return def.settings('nonExistentSetting');
-              };
-              return expect(fn).to["throw"](Error);
-            });
-            return it('should throw and error when trying to set a setting property that is not already defined', function() {
-              var fn;
-              fn = function() {
-                return def.settings({
-                  'nonExistentSetting': true
-                });
-              };
-              return expect(fn).to["throw"](Error);
-            });
+          return after(function() {
+            return def.setNonEnum('_', true);
           });
         });
       });
@@ -410,9 +411,7 @@
         return describe('When a property is defined with a leading underscore in the passed argument object/fn', function() {
           it('should have that property marked as nonEnumerable', function() {
             var definedObj;
-            def.settings({
-              NonEnumUnderscored: true
-            });
+            def.setNonEnum('_', true);
             definedObj = def.Object({
               calculation: function(x) {
                 return this._pseudoPrivateSquare(x);
@@ -423,11 +422,9 @@
             });
             return expect(Object.keys(definedObj)).to.eql(['calculation']);
           });
-          return it('should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off', function() {
+          it('should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off globally', function() {
             var definedObj;
-            def.settings({
-              NonEnumUnderscored: false
-            });
+            def.setNonEnum('_', false);
             definedObj = def.Object({
               calculation: function(x) {
                 return this._pseudoPrivateSquare(x);
@@ -437,9 +434,20 @@
               }
             });
             expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare']);
-            return def.settings({
-              NonEnumUnderscored: true
+            return def.setNonEnum('_', true);
+          });
+          return it('should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off locally', function() {
+            var definedObj;
+            definedObj = def.Object({
+              nonEnum: ['_', false],
+              calculation: function(x) {
+                return this._pseudoPrivateSquare(x);
+              },
+              _pseudoPrivateSquare: function(x) {
+                return x * x;
+              }
             });
+            return expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare']);
           });
         });
       });
