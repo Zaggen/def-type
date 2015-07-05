@@ -10,7 +10,10 @@
 
   defIncModule = {
     conf: {
-      NonEnumUnderscored: true
+      nonEnum: {
+        leadingChar: '_',
+        enabled: true
+      }
     },
 
     /**
@@ -46,7 +49,7 @@
           this.pushStaticMethods(mixin);
         }
       }
-      this.markUnderscoredAsNonEnum(definedObj);
+      this.markPropertiesAsNonEnum(definedObj);
       return this.makeType(definedObj, type);
     },
 
@@ -61,6 +64,7 @@
       }
       includedTypes = definedObj.include;
       accessors = definedObj.accessors;
+      this.currentNonEnumConf = this.makeNonEnumSettings.apply(this, definedObj.nonEnum);
       this.checkIfValid(definedObj, type);
       if (accessors != null) {
         this.defineAccessors(definedObj, accessors);
@@ -78,7 +82,7 @@
     clearConfigKeys: function(definedObj) {
       var attr, key, reservedKeys, tempObj;
       tempObj = {};
-      reservedKeys = ['include', 'prototype', 'accessors'];
+      reservedKeys = ['include', 'prototype', 'accessors', 'nonEnum'];
       for (key in definedObj) {
         attr = definedObj[key];
         if (!_.contains(reservedKeys, key)) {
@@ -281,13 +285,14 @@
       }
       return results;
     },
-    markUnderscoredAsNonEnum: function(definedObj) {
-      var j, len, propertyName, propertyNames;
-      if (this.conf.NonEnumUnderscored) {
+    markPropertiesAsNonEnum: function(definedObj) {
+      var j, len, nonEnum, propertyName, propertyNames;
+      nonEnum = this.currentNonEnumConf;
+      if (nonEnum.enabled) {
         propertyNames = Object.getOwnPropertyNames(definedObj);
         for (j = 0, len = propertyNames.length; j < len; j++) {
           propertyName = propertyNames[j];
-          if (propertyName.charAt(0) === '_') {
+          if (propertyName.charAt(0) === nonEnum.leadingChar) {
             this.defNonEnumProp(definedObj, propertyName);
           }
         }
@@ -296,6 +301,23 @@
       }
       this.freezeProp(definedObj, '_super');
       return true;
+    },
+
+    /** @private */
+    makeNonEnumSettings: function() {
+      var enabledStatus, leadingChar;
+      if (arguments[0] != null) {
+        leadingChar = arguments[0];
+        enabledStatus = arguments[1] != null ? arguments[1] : true;
+        return {
+          nonEnum: {
+            leadingChar: leadingChar,
+            enabled: enabledStatus
+          }
+        };
+      } else {
+        return this.conf.nonEnum;
+      }
     },
 
     /** @private */
@@ -341,31 +363,17 @@
     Object: function(obj) {
       return defIncModule.define.call(defIncModule, obj, 'object');
     },
+    Module: function(obj) {
+      return defIncModule.define.call(defIncModule, obj, 'object');
+    },
     Class: function(obj) {
       return defIncModule.define.call(defIncModule, obj, 'class');
     },
-    settings: function(newConf) {
-      var conf, key, results, setting;
-      conf = defIncModule.conf;
-      if (_.isString(newConf)) {
-        key = newConf;
-        if (conf[key] != null) {
-          return conf[key];
-        } else {
-          throw new Error("Property " + key + " is not a valid setting");
-        }
-      } else if (_.isObject(newConf)) {
-        results = [];
-        for (key in newConf) {
-          setting = newConf[key];
-          if (conf[key] != null) {
-            results.push(conf[key] = setting);
-          } else {
-            throw new Error("Property " + key + " is not a valid setting");
-          }
-        }
-        return results;
-      }
+    setNonEnum: function() {
+      return defIncModule.conf = defIncModule.makeNonEnumSettings(arguments[0], arguments[1]);
+    },
+    getNonEnum: function(conf) {
+      return defIncModule.conf.nonEnum;
     }
   };
 

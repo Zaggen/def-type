@@ -3,7 +3,9 @@ filter = require('./properties-filter')
 
 defIncModule =
   conf:
-    NonEnumUnderscored: true
+    nonEnum:
+      leadingChar: '_'
+      enabled: true
   ###*
   * Defines a new Object or a Class that can inherit properties from other objects/classes in
   * a composable way, i.e you can pick, omit and delegate(methods) from the parent objects.
@@ -31,7 +33,7 @@ defIncModule =
       # to add to our static properties object
       if mixin.__static__? then @pushStaticMethods(mixin)
 
-    @markUnderscoredAsNonEnum(definedObj)
+    @markPropertiesAsNonEnum(definedObj)
 
     # Returns a pseudo-class or the currently defined object
     return @makeType(definedObj, type)
@@ -46,10 +48,13 @@ defIncModule =
     includedTypes = definedObj.include
     #prototype = definedObj.prototype # Not used yet
     accessors = definedObj.accessors
+    @currentNonEnumConf = @makeNonEnumSettings.apply(@, definedObj.nonEnum)
     @checkIfValid(definedObj, type)
     @defineAccessors(definedObj, accessors) if accessors?
+
     # Filter(separates) parentObjects/classes from configurations arrays
     @setIncludes(includedTypes)
+
     definedObj = @clearConfigKeys(definedObj)
     @definedAttrs = _.mapValues(definedObj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
     @staticMethods = {}
@@ -58,7 +63,7 @@ defIncModule =
   ###* @private ###
   clearConfigKeys: (definedObj)->
     tempObj = {}
-    reservedKeys = ['include', 'prototype', 'accessors']
+    reservedKeys = ['include', 'prototype', 'accessors', 'nonEnum']
     for key, attr of definedObj
       unless _.contains(reservedKeys, key)
         tempObj[key] = attr
@@ -206,18 +211,31 @@ defIncModule =
       unless filter.skip(key)
         @staticMethods[key] = attr
 
-  markUnderscoredAsNonEnum: (definedObj)->
-    #@conf.NonEnumUnderscored
-    if @conf.NonEnumUnderscored
+  markPropertiesAsNonEnum: (definedObj)->
+    nonEnum = @currentNonEnumConf
+    if nonEnum.enabled
       propertyNames = Object.getOwnPropertyNames(definedObj)
       for propertyName in propertyNames
-        if propertyName.charAt(0) is '_'
+        if propertyName.charAt(0) is nonEnum.leadingChar
           @defNonEnumProp(definedObj, propertyName)
     else
       @defNonEnumProp(definedObj, '_super')
 
     @freezeProp(definedObj, '_super')
     return true
+
+  ###* @private ###
+  makeNonEnumSettings: ->
+    if arguments[0]?
+      leadingChar = arguments[0]
+      enabledStatus = if arguments[1]? then arguments[1] else true # The default might have changed so we make sure is true
+      return {
+        nonEnum:
+          leadingChar: leadingChar
+          enabled: enabledStatus
+      }
+    else
+      return @conf.nonEnum
 
   ###* @private ###
   freezeProp: (obj, attributeName)->
@@ -249,16 +267,17 @@ defIncModule =
 module.exports =
   Object: (obj)->
     defIncModule.define.call(defIncModule, obj, 'object')
+
+  # Alias for Object definition, just syntactic sugar
+  Module: (obj)->
+    defIncModule.define.call(defIncModule, obj, 'object')
+
   Class: (obj)->
     defIncModule.define.call(defIncModule, obj, 'class')
-  settings: (newConf)->
-    conf = defIncModule.conf
-    if _.isString(newConf)
-      key = newConf
-      if conf[key]? then conf[key] else throw new Error "Property #{key} is not a valid setting"
-    else if _.isObject(newConf)
-      for key, setting of newConf
-        if conf[key]?
-          conf[key] = setting
-        else
-          throw new Error "Property #{key} is not a valid setting"
+
+  # Shortcuts for nonEnum
+  setNonEnum: ->
+    defIncModule.conf = defIncModule.makeNonEnumSettings(arguments[0], arguments[1])
+
+  getNonEnum: (conf)->
+    defIncModule.conf.nonEnum
