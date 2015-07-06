@@ -4,11 +4,8 @@ This is the same bakeIn module with modified syntax, to make it more explicit
 **This module is in active development, and still in beta, do not use in production.... yet**
 
 ## A Multiple composable inheritance module for js
-def-inc is a module that allows you to easily define Objects or classes that can inherit from multiple objects or "classes",
-and lets you to choose which attributes you inherit (Pick/omit/delegate). It also allows you to work with true privacy
-with almost the same syntax.
+def-inc (define-include) is an npm module that allows you to easily define Objects or classes that can inherit from multiple objects or "classes", and lets you to choose which attributes you inherit (Pick/omit/delegate). It also allows you to work with true privacy with almost the same syntax.
  
-
 ## Installation
 `npm install def-inc --save`
 
@@ -37,16 +34,30 @@ enemyBoss = def.Object
     # some code
 
 ```
-
-**Module definition** This is exactly the same function as def.Object, it is just
+**Mixin definition** This is exactly the same function as def.Object, it is just
 an alias to sort of create a convention of defining objects that their sole purpose
 is to be included, pretty much like ruby modules or php traits.
 ```coffeescript
-accountTraits = def.Module
+accountTraits = def.Mixin
   logIn: (req, res)->
     # some code
-  logOut: ((req, res)->
+  logOut: (req, res)->
     # some code
+
+```
+**Module definition** This is another alias for def.Object, it is recomended for npm style modules or a class with static methods. So you can define functionality packed in a module(which is a regular object) that needs to expose a small public API, and is not suppose to be inherited/mixed-in.You can define your own rules, but this is what i use it for.
+```coffeescript
+injector = def.Module ->
+  @set = (fn)->
+    # some code
+  @get =  ->
+    # some code
+    
+  # Private fns
+  import = (path)->
+   # some code
+  importGlobal = (globalName)->
+   #some code
 
 ```
 
@@ -116,15 +127,13 @@ user.fullName = 'Max Payne' # Sets the private name and lastName variables with 
 console.log user.fullName # Logs 'Max Payne'
 ```
 
-## Inheriting
-* `baseObjectN` **Object** (Optional) Objects to extend the receivingObj, they will take precedence from last to first.
+## Include options
 * `configN` **Array** (Optional) with flags(`!`, `*`,`~`) and/or attribute names, e.g:
   - `['attr1', 'attr2']` Will only include those selected attributes from the corresponding object
   - `['~publicMethod']` Delegate; Will only include those selected method and it will bind its context to the original baseObject. This is useful, when you have an object with "public" methods that make use of internal "private" methods, and you don't want to inherit those, this way this inherited method will be able to call all the needed attributes and methods from its original obj. Use this sparingly since it will bite you if you try to use it incorrectly. Just remember that the inherit method will not have access to any of your attributes/methods defined/inherited in the receivingObj. Also, this flag is ignored for non function attributes, and when the exclude flag is set, since we can't bind an excluded method...
   - `['!', 'privateAttr']` Will exclude the selected attr, and include the rest
   - `['!']` Will exclude all attributes. Only useful for debugging purposes
   - `['*']` Will include all attributes. By default if you don't provide a confArray there is no need to explicitly say to include all attributes, but if you use at least one confArray for any of your objects, you must use them for the rest, this is to avoid ambiguity, so use the `*` in those cases.
-* `receivingObj` **Object** The object to extend.
 
 ## Examples
 ```coffeescript
@@ -188,13 +197,12 @@ zaggen.move(15, 40, 10) # Moves the character to position (15,40) in 10 millisec
 
 ### Comming features?
 * I've been thinking in how to implement real protected(shared) methods and private instance variables
-with a nice syntax and so far i have to ideas, one involves using eval, and it'll be a little slower at definition time
+with a nice syntax and so far i have two ideas, one involves using eval, and it'll be a little slower at definition time
 since it has to eval every method once is defined, and using this method is not possible to have instance variables with
 the same syntax. The syntax is pretty much what is on an example up there, where public methods use @ and private methods
 don't.
 
 * The other option which is more realistic and doable, and maybe performs better is something like this:
-**Object definition** (Pretty much the same as defining an object literal)
 ```coffeescript
 
 Player = def.Class (pv)->
