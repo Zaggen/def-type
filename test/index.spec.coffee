@@ -50,9 +50,21 @@ describe 'def-inc Module', ->
         expect(def.Object).to.exist
         expect(def.Object).to.be.a('function')
 
-      it 'should have an Module method', ->
-        expect(def.Module).to.exist
-        expect(def.Module).to.be.a('function')
+      describe 'Module method', ->
+        it 'should exist', ->
+          expect(def.Module).to.exist
+          expect(def.Module).to.be.a('function')
+
+        it 'should be an alias for object method', ->
+          expect(def.Module).to.equal(def.Object)
+
+      describe 'Mixin method', ->
+        it 'should exist', ->
+          expect(def.Mixin).to.exist
+          expect(def.Mixin).to.be.a('function')
+
+        it 'should be an alias for object method', ->
+          expect(def.Mixin).to.equal(def.Object)
 
       it 'should have a Class method', ->
         expect(def.Class).to.exist

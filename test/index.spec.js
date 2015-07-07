@@ -83,9 +83,23 @@
           expect(def.Object).to.exist;
           return expect(def.Object).to.be.a('function');
         });
-        it('should have an Module method', function() {
-          expect(def.Module).to.exist;
-          return expect(def.Module).to.be.a('function');
+        describe('Module method', function() {
+          it('should exist', function() {
+            expect(def.Module).to.exist;
+            return expect(def.Module).to.be.a('function');
+          });
+          return it('should be an alias for object method', function() {
+            return expect(def.Module).to.equal(def.Object);
+          });
+        });
+        describe('Mixin method', function() {
+          it('should exist', function() {
+            expect(def.Mixin).to.exist;
+            return expect(def.Mixin).to.be.a('function');
+          });
+          return it('should be an alias for object method', function() {
+            return expect(def.Mixin).to.equal(def.Object);
+          });
         });
         it('should have a Class method', function() {
           expect(def.Class).to.exist;
