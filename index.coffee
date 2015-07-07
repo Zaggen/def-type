@@ -1,11 +1,18 @@
 _ = require('lodash')
 filter = require('./properties-filter')
-
-defIncModule =
+defInc = {}
+defInc =
   conf:
     nonEnum:
       leadingChar: '_'
       enabled: true
+
+  defObject: (obj)->
+    defInc.define(obj, 'object')
+
+  defClass: (obj)->
+    defInc.define(obj, 'class')
+
   ###*
   * Defines a new Object or a Class that can inherit properties from other objects/classes in
   * a composable way, i.e you can pick, omit and delegate(methods) from the parent objects.
@@ -263,21 +270,16 @@ defIncModule =
     #fn.prototype.constructor = fn # This creates a circular reference, should check soon
     return classFn
 
-
 module.exports =
-  Object: (obj)->
-    defIncModule.define.call(defIncModule, obj, 'object')
-
+  Class: defInc.defClass
+  Object: defInc.defObject
   # Alias for Object definition, just syntactic sugar
-  Module: (obj)->
-    defIncModule.define.call(defIncModule, obj, 'object')
-
-  Class: (obj)->
-    defIncModule.define.call(defIncModule, obj, 'class')
+  Module: defInc.defObject
+  Mixin: defInc.defObject
 
   # Shortcuts for nonEnum
   setNonEnum: ->
-    defIncModule.conf = defIncModule.makeNonEnumSettings(arguments[0], arguments[1])
+    defInc.conf = defInc.makeNonEnumSettings(arguments[0], arguments[1])
 
   getNonEnum: (conf)->
-    defIncModule.conf.nonEnum
+    defInc.conf.nonEnum
