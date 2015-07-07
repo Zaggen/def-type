@@ -1,10 +1,10 @@
 {
   "name": "def-inc",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "A Flexible inheritance module, where you can pick/omit attributes from the parents.",
   "main": "index.js",
   "scripts": {
-    "test": "mocha test/*.spec.coffee"
+    "test": "mocha --watch test/*.spec.coffee index.coffee"
   },
   "repository": {
     "type": "git",
