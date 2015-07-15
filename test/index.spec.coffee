@@ -101,11 +101,11 @@ describe 'def-inc Module', ->
     describe 'The defined object', ->
 
       it 'should have all properties from the included mixins', ->
-        definedObj = def.Object( merge: [mixin1, mixin2, mixin6] )
+        definedObj = def.Object( merges: [mixin1, mixin2, mixin6] )
         expect(definedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList')
 
       it 'should be able to call the inherited methods', ->
-        definedObj = def.Object( merge: [mixin1, mixin2, mixin6])
+        definedObj = def.Object( merges: [mixin1, mixin2, mixin6])
         expect(definedObj.sum(5, 10)).to.equal(15)
         expect(definedObj.increaseByOne(3)).to.equal(4)
         expect(definedObj.multiply(4, 2)).to.equal(8)
@@ -113,7 +113,7 @@ describe 'def-inc Module', ->
 
       describe 'the inherited attributes(data)', ->
         it 'should have been cloned and not just referenced', ->
-          definedObj = def.Object(merge: [mixin5, mixin6])
+          definedObj = def.Object(merges: [mixin5, mixin6])
           delete mixin5.preferences.fullScreen
           expect(definedObj.preferences.fullScreen).to.exist
 
@@ -127,7 +127,7 @@ describe 'def-inc Module', ->
             only surpassed by the attribute defined in the current Object/Class itself', ->
 
           definedObj = def.Object
-            merge: [mixin5, mixin6]
+            merges: [mixin5, mixin6]
             increaseByOne: (n)->  @sum(n, 1)
             preferences:
               autoPlay: true
@@ -137,7 +137,7 @@ describe 'def-inc Module', ->
           expect(definedObj.preferences.autoPlay).to.be.true
 
       it 'should only include the specified attributes from included, when an attr list [] is provided', ->
-        definedObj = def.Object( merge: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6, ['*']] )
+        definedObj = def.Object( merges: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6, ['*']] )
         expect(definedObj.sum).to.exist
         expect(definedObj.multiply).to.not.exist
         expect(definedObj._privateAttr).to.not.exist
@@ -146,25 +146,25 @@ describe 'def-inc Module', ->
         expect(definedObj._privateMethod3).to.not.exist
 
       it 'should be able to exclude an attribute from a baked baseObject, when an "!" flag is provided e.g: ["!", "attr1", "attr2"]', ->
-        definedObj = def.Object( merge: [mixin1, ['!', 'multiply'], mixin6, ['*'] ] )
+        definedObj = def.Object( merges: [mixin1, ['!', 'multiply'], mixin6, ['*'] ] )
         expect(definedObj.sum).to.exist
         expect(definedObj.multiply).to.not.exist
 
 
       it 'should include all attributes from a baked baseObject when an ["*"] (includeAll)  flag is provided', ->
-        definedObj = def.Object( merge: [mixin1, ['*'], mixin6, ['*'] ] )
+        definedObj = def.Object( merges: [mixin1, ['*'], mixin6, ['*'] ] )
         expect(definedObj.sum).to.exist
         expect(definedObj.multiply).to.exist
         expect(definedObj.increaseByOne).to.exist
 
       it 'should exclude all attributes from a baked baseObject when an ["!"] (excludeAll) flag is provided', ->
-        definedObj = def.Object( merge: [mixin1, ['!'], mixin6, ['*'] ] )
+        definedObj = def.Object( merges: [mixin1, ['!'], mixin6, ['*'] ] )
         expect(definedObj.sum).to.not.exist
         expect(definedObj.multiply).to.not.exist
         expect(definedObj.increaseByOne).to.exist
 
       it 'should have the _.super property hidden and frozen (non: enumerable, configurable, writable)', ->
-        definedObj = def.Object( merge: [mixin1, mixin6, ['*']])
+        definedObj = def.Object( merges: [mixin1, mixin6, ['*']])
         expect(definedObj.propertyIsEnumerable('_super')).to.be.false
         expect(Object.isFrozen(definedObj._super)).to.be.true
 
@@ -172,7 +172,7 @@ describe 'def-inc Module', ->
         class Parent
           someMethod: -> 'x'
 
-        definedObj = def.Object( merge: [ Parent, ['!', 'constructor'], mixin6, ['*'] ] )
+        definedObj = def.Object( merges: [ Parent, ['!', 'constructor'], mixin6, ['*'] ] )
         expect(definedObj.someMethod).to.exist
         expect(definedObj.someMethod()).to.equal('x')
 
@@ -185,7 +185,7 @@ describe 'def-inc Module', ->
       it 'should not include static attributes (classAttributes) from constructor functions/classes', ->
         class Parent
           @staticMethod: -> 'y'
-        definedObj = def.Object( merge: [ Parent, ['!', 'constructor'] ])
+        definedObj = def.Object( merges: [ Parent, ['!', 'constructor'] ])
         expect(definedObj.staticMethod).to.not.exist
 
       describe 'When the accessors property is defined', ->
@@ -252,13 +252,13 @@ describe 'def-inc Module', ->
 
       describe 'When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', ->
         it 'should bind the method context to the original obj (parent) instead of the target obj', ->
-          definedObj = def.Object( merge: [ mixin4, ['~publicMethod'] ])
+          definedObj = def.Object( merges: [ mixin4, ['~publicMethod'] ])
           expect(definedObj._privateAttr).to.not.exist
           expect(definedObj._privateMethod).to.not.exist
           expect(definedObj.publicMethod).to.exist
           expect(definedObj.publicMethod(2)).to.equal(10)
         it 'should ignore ~ when using the exclude flag', ->
-          definedObj = def.Object( merge: [ mixin4, ['!', '~_privateMethod'] ])
+          definedObj = def.Object( merges: [ mixin4, ['!', '~_privateMethod'] ])
           expect(definedObj._privateMethod).to.not.exist
 
       describe 'When inheriting from multiple objects', ->
@@ -266,15 +266,15 @@ describe 'def-inc Module', ->
             precedence over the first ones, when an attribute is found in more than one object', ->
 
           # This avoids the diamond problem with multiple inheritance
-          definedObj = def.Object( merge: [ mixin1, {multiply: (x)-> x} ])
+          definedObj = def.Object( merges: [ mixin1, {multiply: (x)-> x} ])
           expect(definedObj.multiply(5)).to.equal(5)
-          definedObj2 = def.Object( merge: [ definedObj, mixin1 ])
+          definedObj2 = def.Object( merges: [ definedObj, mixin1 ])
           expect(definedObj2.multiply(5, 5)).to.equal(25)
 
       describe 'When redefining a function in the receiving object', ->
         it 'should be able to call the parent obj method via the _super obj', ->
           definedObj = def.Object
-            merge: [ mixin1 ]
+            merges: [ mixin1 ]
             multiply: (numbers...)->
               @_super.multiply.apply(this, numbers) * 2
 
@@ -326,7 +326,7 @@ describe 'def-inc Module', ->
             @staticMethod: -> 'y'
 
           definedClass = def.Class
-            merge: [ Parent, ['!', 'attr'] ]
+            merges: [ Parent, ['!', 'attr'] ]
             constructor:-> true
 
           expect(definedClass.staticMethod).to.exist
@@ -338,7 +338,7 @@ describe 'def-inc Module', ->
       describe 'When any of the included element defines a constructor method', ->
         it 'should be a constructor function that calls the constructor defined in the receiving obj ', ->
           definedObj = def.Class
-            merge: [ {constructor: (msg)-> @msg = msg} ]
+            merges: [ {constructor: (msg)-> @msg = msg} ]
             constructor: -> @_super.constructor(this, "I'm baked")
 
           instance = new definedObj("I'm baked")
