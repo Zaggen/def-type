@@ -1,6 +1,6 @@
 {
   "name": "def-inc",
-  "version": "0.3.1",
+  "version": "0.4.0",
   "description": "A Flexible inheritance module, where you can pick/omit attributes from the parents.",
   "main": "index.js",
   "scripts": {
@@ -14,6 +14,11 @@
     "mixin",
     "bakeIn",
     "extend",
+    "merge",
+    "mixes",
+    "mixable",
+    "module",
+    "coffeeScript",
     "multiple inheritance",
     "sails.js",
     "composition",
