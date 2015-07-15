@@ -170,15 +170,25 @@
 
     /** @private */
     setIncludes: function(mixins) {
+      var balancer;
       this.mixins = [];
       this.options = [];
       this.useParentContext = {};
+      balancer = {
+        mixinsCount: 0,
+        optionsCount: 0
+      };
       return _.each(mixins, (function(_this) {
         return function(mixin) {
-          var fn, obj;
+          var fn, i, j, obj, padding, ref;
           if (!_.isObject(mixin)) {
             throw new Error('Def-inc only accepts objects/arrays/fns e.g (fn/{} parent objects/classes or an [] with options)');
           } else if (_this.isOptionArr(mixin)) {
+            balancer.optionsCount++;
+            padding = balancer.mixinsCount - balancer.optionsCount;
+            for (i = j = 0, ref = padding; 0 <= ref ? j < ref : j > ref; i = 0 <= ref ? ++j : --j) {
+              _this.options.push(_this.makeOptionsObj(['*']));
+            }
             return _this.options.push(_this.makeOptionsObj(mixin));
           } else if (_.isFunction(mixin)) {
             fn = mixin;
@@ -188,9 +198,11 @@
               value: _.merge({}, fn),
               enumerable: false
             });
-            return _this.mixins.push(obj);
+            _this.mixins.push(obj);
+            return balancer.mixinsCount++;
           } else {
-            return _this.mixins.push(mixin);
+            _this.mixins.push(mixin);
+            return balancer.mixinsCount++;
           }
         };
       })(this));

@@ -52,8 +52,9 @@ defInc =
       propsDefiner.call(definedObj)
     else
       definedObj = propsDefiner
+
     includedTypes = definedObj.merges
-    #prototype = definedObj.prototype # Not used yet
+    #prototype = definedObj.extends # Not used yet
     accessors = definedObj.accessors
     @currentNonEnumConf = @makeNonEnumSettings.apply(@, definedObj.nonEnum)
     @checkIfValid(definedObj, type)
@@ -136,11 +137,24 @@ defInc =
     @mixins = []
     @options = []
     @useParentContext = {}
+    balancer =
+      mixinsCount: 0
+      optionsCount: 0
+    # definedObj = def.Object( merges: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6, ['*']] )
     _.each mixins, (mixin)=>
       if not _.isObject(mixin)
         throw new Error 'Def-inc only accepts objects/arrays/fns e.g (fn/{} parent objects/classes or an [] with options)'
       else if @isOptionArr(mixin)
+        # We check if the is other options already set for the mixins, by checking the difference
+        # between the mixinCount and the optionsCount, and we add the include all flag in an array ['*']
+        # before adding the actual option into the options array
+        balancer.optionsCount++
+        padding = balancer.mixinsCount - balancer.optionsCount
+        for i in [0...padding]
+          @options.push(@makeOptionsObj(['*']))
+
         @options.push(@makeOptionsObj(mixin))
+
       else if _.isFunction(mixin)
         # When a fn is passed, we assume is a constructor, so we copy the properties in its prototype,
         # as well as any attribute that might be attached to the constructor itself(not usual, but lets be safe)
@@ -155,9 +169,11 @@ defInc =
           value: _.merge({}, fn)
           enumerable: false
         @mixins.push(obj)
+        balancer.mixinsCount++
       else
         # If it is a simple object we just add it to our array
         @mixins.push(mixin)
+        balancer.mixinsCount++
 
   ###* @private ###
   isOptionArr: (arg)->

@@ -142,7 +142,7 @@
         });
       });
       describe('The defined object', function() {
-        it('should have all properties from the included mixins', function() {
+        it('should have all properties from the included (merged) mixins', function() {
           var definedObj;
           definedObj = def.Object({
             merges: [mixin1, mixin2, mixin6]
@@ -203,7 +203,7 @@
           expect(definedObj._privateMethod2).to.not.exist;
           return expect(definedObj._privateMethod3).to.not.exist;
         });
-        it('should be able to exclude an attribute from a baked baseObject, when an "!" flag is provided e.g: ["!", "attr1", "attr2"]', function() {
+        it('should be able to exclude an attribute from merged mixin/Class, when an "!" flag is provided e.g: ["!", "attr1", "attr2"]', function() {
           var definedObj;
           definedObj = def.Object({
             merges: [mixin1, ['!', 'multiply'], mixin6, ['*']]
@@ -211,7 +211,7 @@
           expect(definedObj.sum).to.exist;
           return expect(definedObj.multiply).to.not.exist;
         });
-        it('should include all attributes from a baked baseObject when an ["*"] (includeAll)  flag is provided', function() {
+        it('should include all attributes from a merged mixin when an ["*"] (includeAll)  flag is provided', function() {
           var definedObj;
           definedObj = def.Object({
             merges: [mixin1, ['*'], mixin6, ['*']]
@@ -220,7 +220,7 @@
           expect(definedObj.multiply).to.exist;
           return expect(definedObj.increaseByOne).to.exist;
         });
-        it('should exclude all attributes from a baked baseObject when an ["!"] (excludeAll) flag is provided', function() {
+        it('should exclude all attributes from a merged mixin when an ["!"] (excludeAll) flag is provided', function() {
           var definedObj;
           definedObj = def.Object({
             merges: [mixin1, ['!'], mixin6, ['*']]
@@ -229,10 +229,25 @@
           expect(definedObj.multiply).to.not.exist;
           return expect(definedObj.increaseByOne).to.exist;
         });
+        describe('When merging multiple objects and not passing merging options to all of them', function() {
+          return it('should assume an "*" flag for those that are not explicitly defined', function() {
+            var definedObj, definedObj2;
+            definedObj = def.Object({
+              merges: [mixin1, mixin6, ['increaseByOne']]
+            });
+            expect(definedObj.increaseByOne(4)).to.equal(5);
+            expect(definedObj.multiply).to.exist;
+            definedObj2 = def.Object({
+              merges: [mixin1, ['sum'], mixin6]
+            });
+            expect(definedObj2.increaseByOne(4)).to.equal(5);
+            return expect(definedObj2.multiply).to.not.exist;
+          });
+        });
         it('should have the _.super property hidden and frozen (non: enumerable, configurable, writable)', function() {
           var definedObj;
           definedObj = def.Object({
-            merges: [mixin1, mixin6, ['*']]
+            merges: [mixin1, mixin6]
           });
           expect(definedObj.propertyIsEnumerable('_super')).to.be["false"];
           return expect(Object.isFrozen(definedObj._super)).to.be["true"];
