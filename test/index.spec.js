@@ -145,14 +145,14 @@
         it('should have all properties from the included mixins', function() {
           var definedObj;
           definedObj = def.Object({
-            include: [mixin1, mixin2, mixin6]
+            merge: [mixin1, mixin2, mixin6]
           });
           return expect(definedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList');
         });
         it('should be able to call the inherited methods', function() {
           var definedObj;
           definedObj = def.Object({
-            include: [mixin1, mixin2, mixin6]
+            merge: [mixin1, mixin2, mixin6]
           });
           expect(definedObj.sum(5, 10)).to.equal(15);
           expect(definedObj.increaseByOne(3)).to.equal(4);
@@ -163,7 +163,7 @@
           it('should have been cloned and not just referenced', function() {
             var definedObj;
             definedObj = def.Object({
-              include: [mixin5, mixin6]
+              merge: [mixin5, mixin6]
             });
             delete mixin5.preferences.fullScreen;
             return expect(definedObj.preferences.fullScreen).to.exist;
@@ -178,7 +178,7 @@
           return it('should merge them with the following precedence: From left to right in the included mixins list, being the last one the one with more precedence, only surpassed by the attribute defined in the current Object/Class itself', function() {
             var definedObj;
             definedObj = def.Object({
-              include: [mixin5, mixin6],
+              merge: [mixin5, mixin6],
               increaseByOne: function(n) {
                 return this.sum(n, 1);
               },
@@ -194,7 +194,7 @@
         it('should only include the specified attributes from included, when an attr list [] is provided', function() {
           var definedObj;
           definedObj = def.Object({
-            include: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6, ['*']]
+            merge: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6, ['*']]
           });
           expect(definedObj.sum).to.exist;
           expect(definedObj.multiply).to.not.exist;
@@ -206,7 +206,7 @@
         it('should be able to exclude an attribute from a baked baseObject, when an "!" flag is provided e.g: ["!", "attr1", "attr2"]', function() {
           var definedObj;
           definedObj = def.Object({
-            include: [mixin1, ['!', 'multiply'], mixin6, ['*']]
+            merge: [mixin1, ['!', 'multiply'], mixin6, ['*']]
           });
           expect(definedObj.sum).to.exist;
           return expect(definedObj.multiply).to.not.exist;
@@ -214,7 +214,7 @@
         it('should include all attributes from a baked baseObject when an ["*"] (includeAll)  flag is provided', function() {
           var definedObj;
           definedObj = def.Object({
-            include: [mixin1, ['*'], mixin6, ['*']]
+            merge: [mixin1, ['*'], mixin6, ['*']]
           });
           expect(definedObj.sum).to.exist;
           expect(definedObj.multiply).to.exist;
@@ -223,7 +223,7 @@
         it('should exclude all attributes from a baked baseObject when an ["!"] (excludeAll) flag is provided', function() {
           var definedObj;
           definedObj = def.Object({
-            include: [mixin1, ['!'], mixin6, ['*']]
+            merge: [mixin1, ['!'], mixin6, ['*']]
           });
           expect(definedObj.sum).to.not.exist;
           expect(definedObj.multiply).to.not.exist;
@@ -232,7 +232,7 @@
         it('should have the _.super property hidden and frozen (non: enumerable, configurable, writable)', function() {
           var definedObj;
           definedObj = def.Object({
-            include: [mixin1, mixin6, ['*']]
+            merge: [mixin1, mixin6, ['*']]
           });
           expect(definedObj.propertyIsEnumerable('_super')).to.be["false"];
           return expect(Object.isFrozen(definedObj._super)).to.be["true"];
@@ -250,7 +250,7 @@
 
           })();
           definedObj = def.Object({
-            include: [Parent, ['!', 'constructor'], mixin6, ['*']]
+            merge: [Parent, ['!', 'constructor'], mixin6, ['*']]
           });
           expect(definedObj.someMethod).to.exist;
           return expect(definedObj.someMethod()).to.equal('x');
@@ -279,7 +279,7 @@
 
           })();
           definedObj = def.Object({
-            include: [Parent, ['!', 'constructor']]
+            merge: [Parent, ['!', 'constructor']]
           });
           return expect(definedObj.staticMethod).to.not.exist;
         });
@@ -374,7 +374,7 @@
           it('should bind the method context to the original obj (parent) instead of the target obj', function() {
             var definedObj;
             definedObj = def.Object({
-              include: [mixin4, ['~publicMethod']]
+              merge: [mixin4, ['~publicMethod']]
             });
             expect(definedObj._privateAttr).to.not.exist;
             expect(definedObj._privateMethod).to.not.exist;
@@ -384,7 +384,7 @@
           return it('should ignore ~ when using the exclude flag', function() {
             var definedObj;
             definedObj = def.Object({
-              include: [mixin4, ['!', '~_privateMethod']]
+              merge: [mixin4, ['!', '~_privateMethod']]
             });
             return expect(definedObj._privateMethod).to.not.exist;
           });
@@ -393,7 +393,7 @@
           return it('should include/inherit attributes in the opposite order they were passed to the function, so the last ones takes precedence over the first ones, when an attribute is found in more than one object', function() {
             var definedObj, definedObj2;
             definedObj = def.Object({
-              include: [
+              merge: [
                 mixin1, {
                   multiply: function(x) {
                     return x;
@@ -403,7 +403,7 @@
             });
             expect(definedObj.multiply(5)).to.equal(5);
             definedObj2 = def.Object({
-              include: [definedObj, mixin1]
+              merge: [definedObj, mixin1]
             });
             return expect(definedObj2.multiply(5, 5)).to.equal(25);
           });
@@ -412,7 +412,7 @@
           return it('should be able to call the parent obj method via the _super obj', function() {
             var definedObj;
             definedObj = def.Object({
-              include: [mixin1],
+              merge: [mixin1],
               multiply: function() {
                 var numbers;
                 numbers = 1 <= arguments.length ? slice.call(arguments, 0) : [];
@@ -501,7 +501,7 @@
 
             })();
             definedClass = def.Class({
-              include: [Parent, ['!', 'attr']],
+              merge: [Parent, ['!', 'attr']],
               constructor: function() {
                 return true;
               }
@@ -516,7 +516,7 @@
           return it('should be a constructor function that calls the constructor defined in the receiving obj ', function() {
             var definedObj, instance;
             definedObj = def.Class({
-              include: [
+              merge: [
                 {
                   constructor: function(msg) {
                     return this.msg = msg;
