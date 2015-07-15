@@ -70,7 +70,7 @@
       } else {
         definedObj = propsDefiner;
       }
-      includedTypes = definedObj.include;
+      includedTypes = definedObj.merges;
       accessors = definedObj.accessors;
       this.currentNonEnumConf = this.makeNonEnumSettings.apply(this, definedObj.nonEnum);
       this.checkIfValid(definedObj, type);
@@ -90,7 +90,7 @@
     clearConfigKeys: function(definedObj) {
       var attr, key, reservedKeys, tempObj;
       tempObj = {};
-      reservedKeys = ['include', 'prototype', 'accessors', 'nonEnum'];
+      reservedKeys = ['merges', 'prototype', 'accessors', 'nonEnum'];
       for (key in definedObj) {
         attr = definedObj[key];
         if (!_.contains(reservedKeys, key)) {

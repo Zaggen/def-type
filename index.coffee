@@ -52,7 +52,7 @@ defInc =
       propsDefiner.call(definedObj)
     else
       definedObj = propsDefiner
-    includedTypes = definedObj.include
+    includedTypes = definedObj.merges
     #prototype = definedObj.prototype # Not used yet
     accessors = definedObj.accessors
     @currentNonEnumConf = @makeNonEnumSettings.apply(@, definedObj.nonEnum)
@@ -70,7 +70,7 @@ defInc =
   ###* @private ###
   clearConfigKeys: (definedObj)->
     tempObj = {}
-    reservedKeys = ['include', 'prototype', 'accessors', 'nonEnum']
+    reservedKeys = ['merges', 'prototype', 'accessors', 'nonEnum']
     for key, attr of definedObj
       unless _.contains(reservedKeys, key)
         tempObj[key] = attr
