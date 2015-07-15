@@ -148,7 +148,6 @@
             definedObj = def.Object({
               "extends": mixin1
             });
-            console.log(definedObj.__proto__);
             return expect(definedObj.__proto__).to.have.all.keys('sum', 'multiply');
           });
         });

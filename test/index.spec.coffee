@@ -103,7 +103,6 @@ describe 'def-inc Module', ->
       describe 'When using the "extends" directive', ->
         it 'should have all properties from the passed mixin via prototype', ->
           definedObj = def.Object( extends: mixin1 )
-          console.log definedObj.__proto__
           expect(definedObj.__proto__).to.have.all.keys('sum', 'multiply')
 
       describe 'When using the "merges" directive', ->
