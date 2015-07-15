@@ -4,7 +4,7 @@ This is the same bakeIn module with modified syntax, to make it more explicit
 **This module is in active development, and still in beta, do not use in production.... yet**
 
 ## A Multiple composable inheritance module for js
-def-inc (define-include) is an npm module that allows you to easily define Objects or classes that can inherit from multiple objects or "classes", and lets you to choose which attributes you inherit (Pick/omit/delegate). It also allows you to work with true privacy with almost the same syntax.
+def-inc (define-incorporated) is an npm module that allows you to easily define Objects or classes that can inherit from multiple objects or "classes", and lets you to choose which attributes you merge/inherit (Pick/omit/delegate). It also allows you to work with true privacy with almost the same syntax.
  
 ## Installation
 `npm install def-inc --save`
@@ -65,7 +65,7 @@ injector = def.Module ->
 You can inherit from multiple "Clases" or objects, or a mixture of both. 
 ```coffeescript
 Admin = def.Class
-  include: [ accountTraits, ['logIn', 'logOut'],  User, ['*'] ]
+  merge: [ accountTraits, ['logIn', 'logOut'],  User, ['*'] ]
   constructor: (@name)->
     @privileges = 'all'
   deleteUser: ->
@@ -173,7 +173,7 @@ killable =
     #Set hp to 0, and show dead animation
 
 Player = def.Class(
-  include: [ gameCharacter, ['~lvlUp'], killable, ['kill'] ]
+  merge: [ gameCharacter, ['~lvlUp'], killable, ['kill'] ]
   constructor: (playerName)->
     @msg = "#{playerName} is ready to kill some goblins!"
   sayMsg: ->
