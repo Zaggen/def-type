@@ -1,5 +1,5 @@
 # Def-Inc
-This is the same bakeIn module with modified syntax, to make it more explicit
+![travis.ci](https://travis-ci.org/Zaggen/def-inc.svg?branch=master "Build Status")
 
 **This module is in active development, and still in beta, do not use in production.... yet**
 
