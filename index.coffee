@@ -54,7 +54,7 @@ defInc =
       definedObj = propsDefiner
 
     includedTypes = definedObj.merges
-    #prototype = definedObj.extends # Not used yet
+    prototype = definedObj.extends
     accessors = definedObj.accessors
     @currentNonEnumConf = @makeNonEnumSettings.apply(@, definedObj.nonEnum)
     @checkIfValid(definedObj, type)
@@ -66,12 +66,13 @@ defInc =
     definedObj = @clearConfigKeys(definedObj)
     @definedAttrs = _.mapValues(definedObj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
     @staticMethods = {}
+    if prototype? then definedObj = Object.create(prototype, definedObj)
     return definedObj
 
   ###* @private ###
   clearConfigKeys: (definedObj)->
     tempObj = {}
-    reservedKeys = ['merges', 'prototype', 'accessors', 'nonEnum']
+    reservedKeys = ['merges', 'extends', 'accessors', 'nonEnum']
     for key, attr of definedObj
       unless _.contains(reservedKeys, key)
         tempObj[key] = attr

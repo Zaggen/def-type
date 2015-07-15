@@ -100,257 +100,265 @@ describe 'def-inc Module', ->
 
     describe 'The defined object', ->
 
-      it 'should have all properties from the included (merged) mixins', ->
-        definedObj = def.Object( merges: [mixin1, mixin2, mixin6] )
-        expect(definedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList')
+      describe 'When using the "extends" directive', ->
+        it 'should have all properties from the passed mixin via prototype', ->
+          definedObj = def.Object( extends: mixin1 )
+          console.log definedObj.__proto__
+          expect(definedObj.__proto__).to.have.all.keys('sum', 'multiply')
 
-      it 'should be able to call the inherited methods', ->
-        definedObj = def.Object( merges: [mixin1, mixin2, mixin6])
-        expect(definedObj.sum(5, 10)).to.equal(15)
-        expect(definedObj.increaseByOne(3)).to.equal(4)
-        expect(definedObj.multiply(4, 2)).to.equal(8)
-        expect(definedObj.pow(2, 3)).to.equal(9)
+      describe 'When using the "merges" directive', ->
 
-      describe 'the inherited attributes(data)', ->
-        it 'should have been cloned and not just referenced', ->
-          definedObj = def.Object(merges: [mixin5, mixin6])
-          delete mixin5.preferences.fullScreen
-          expect(definedObj.preferences.fullScreen).to.exist
+        it 'should have all properties from the included (merged) mixins', ->
+          definedObj = def.Object( merges: [mixin1, mixin2, mixin6] )
+          expect(definedObj).to.have.all.keys('increaseByOne', 'sum', 'multiply', 'pow', 'enable', 'itemList')
 
-        after ->
-          # Lets reset mixin5
-          mixin5.preferences = {fullScreen: true}
+        it 'should be able to call the inherited methods', ->
+          definedObj = def.Object( merges: [mixin1, mixin2, mixin6])
+          expect(definedObj.sum(5, 10)).to.equal(15)
+          expect(definedObj.increaseByOne(3)).to.equal(4)
+          expect(definedObj.multiply(4, 2)).to.equal(8)
+          expect(definedObj.pow(2, 3)).to.equal(9)
 
-      describe 'When the included mixins or the currently defined Object/Class has a name conflict on an attribute(data)', ->
-        it 'should merge them with the following precedence:
-            From left to right in the included mixins list, being the last one the one with more precedence,
-            only surpassed by the attribute defined in the current Object/Class itself', ->
+        describe 'the inherited attributes(data)', ->
+          it 'should have been cloned and not just referenced', ->
+            definedObj = def.Object(merges: [mixin5, mixin6])
+            delete mixin5.preferences.fullScreen
+            expect(definedObj.preferences.fullScreen).to.exist
 
-          definedObj = def.Object
-            merges: [mixin5, mixin6]
-            increaseByOne: (n)->  @sum(n, 1)
-            preferences:
-              autoPlay: true
+          after ->
+            # Lets reset mixin5
+            mixin5.preferences = {fullScreen: true}
 
-          expect(definedObj.enable).to.be.false
-          expect(definedObj.preferences.fullScreen).to.be.true
-          expect(definedObj.preferences.autoPlay).to.be.true
+        describe 'When the included mixins or the currently defined Object/Class has a name conflict on an attribute(data)', ->
+          it 'should merge them with the following precedence:
+              From left to right in the included mixins list, being the last one the one with more precedence,
+              only surpassed by the attribute defined in the current Object/Class itself', ->
 
-      it 'should only include the specified attributes from included, when an attr list [] is provided', ->
-        definedObj = def.Object( merges: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6, ['*']] )
-        expect(definedObj.sum).to.exist
-        expect(definedObj.multiply).to.not.exist
-        expect(definedObj._privateAttr).to.not.exist
-        expect(definedObj._privateMethod).to.not.exist
-        expect(definedObj._privateMethod2).to.not.exist
-        expect(definedObj._privateMethod3).to.not.exist
+            definedObj = def.Object
+              merges: [mixin5, mixin6]
+              increaseByOne: (n)->  @sum(n, 1)
+              preferences:
+                autoPlay: true
 
-      it 'should be able to exclude an attribute from merged mixin/Class, when an "!" flag is provided e.g: ["!", "attr1", "attr2"]', ->
-        definedObj = def.Object( merges: [mixin1, ['!', 'multiply'], mixin6, ['*'] ] )
-        expect(definedObj.sum).to.exist
-        expect(definedObj.multiply).to.not.exist
+            expect(definedObj.enable).to.be.false
+            expect(definedObj.preferences.fullScreen).to.be.true
+            expect(definedObj.preferences.autoPlay).to.be.true
 
-
-      it 'should include all attributes from a merged mixin when an ["*"] (includeAll)  flag is provided', ->
-        definedObj = def.Object( merges: [mixin1, ['*'], mixin6, ['*'] ] )
-        expect(definedObj.sum).to.exist
-        expect(definedObj.multiply).to.exist
-        expect(definedObj.increaseByOne).to.exist
-
-      it 'should exclude all attributes from a merged mixin when an ["!"] (excludeAll) flag is provided', ->
-        definedObj = def.Object( merges: [mixin1, ['!'], mixin6, ['*'] ] )
-        expect(definedObj.sum).to.not.exist
-        expect(definedObj.multiply).to.not.exist
-        expect(definedObj.increaseByOne).to.exist
-
-      describe 'When merging multiple objects and not passing merging options to all of them', ->
-        it 'should assume an "*" flag for those that are not explicitly defined', ->
-          definedObj = def.Object( merges: [mixin1, mixin6, ['increaseByOne'] ] )
-          expect(definedObj.increaseByOne(4)).to.equal(5)
-          expect(definedObj.multiply).to.exist
-
-          # Different order
-          definedObj2 = def.Object( merges: [mixin1, ['sum'], mixin6] )
-          expect(definedObj2.increaseByOne(4)).to.equal(5)
-          expect(definedObj2.multiply).to.not.exist
-
-      it 'should have the _.super property hidden and frozen (non: enumerable, configurable, writable)', ->
-        definedObj = def.Object( merges: [mixin1, mixin6])
-        expect(definedObj.propertyIsEnumerable('_super')).to.be.false
-        expect(Object.isFrozen(definedObj._super)).to.be.true
-
-      it 'should include attributes from constructor functions/classes prototypes, when constructor is excluded', ->
-        class Parent
-          someMethod: -> 'x'
-
-        definedObj = def.Object( merges: [ Parent, ['!', 'constructor'], mixin6, ['*'] ] )
-        expect(definedObj.someMethod).to.exist
-        expect(definedObj.someMethod()).to.equal('x')
-
-      it 'should throw an error when a constructor method is defined', ->
-        defObject = ->
-          def.defObject(constructor: -> true)
-
-        expect(defObject).to.throw(Error)
-
-      it 'should not include static attributes (classAttributes) from constructor functions/classes', ->
-        class Parent
-          @staticMethod: -> 'y'
-        definedObj = def.Object( merges: [ Parent, ['!', 'constructor'] ])
-        expect(definedObj.staticMethod).to.not.exist
-
-      describe 'When the accessors property is defined', ->
-        describe 'In the object passed as argument to the def method (Object/Class)', ->
-          definedObj = def.Object
-            accessors: ['fullName']
-            _name: 'John'
-            _lastName: 'Doe'
-            fullName:
-              get: -> "#{@_name} #{@_lastName}"
-              set: (fullName)->
-                nameParts = fullName.split(' ')
-                @_name = nameParts[0]
-                @_lastName = nameParts[1]
-
-          it 'should set the getter to the specified attribute', ->
-            expect(definedObj.fullName).to.equal('John Doe')
-
-          it 'should set the setter to the specified attribute', ->
-            definedObj.fullName
-            expect(definedObj.fullName).to.equal('John Doe')
-
-        describe 'In a fn passed as argument to the def method (Object/Class)', ->
-          definedObj = def.Object ->
-            name = 'John'
-            lastName =  'Doe'
-            @accessors = ['fullName']
-            @fullName =
-              get: -> "#{name} #{lastName}"
-              set: (fullName)->
-                nameParts = fullName.split(' ')
-                name = nameParts[0]
-                lastName = nameParts[1]
-
-          it 'should set the getter to the specified attribute', ->
-            expect(definedObj.fullName).to.equal('John Doe')
-
-          it 'should set the setter to the specified attribute', ->
-            definedObj.fullName
-            expect(definedObj.fullName).to.equal('John Doe')
-
-
-      describe 'when using a function as argument instead of an obj', ->
-        it 'should be able to call truly static private attributes, when defining it as a local variable of the fn', ->
-          definedObj = def.Object ->
-            # Private Attrs
-            privateVar = 5
-            # Public Attrs
-            @set = (n)-> privateVar = n
-            @get = -> privateVar
-
-          expect(definedObj.privateVar).to.not.exist
-          expect(definedObj.get()).to.equal(5)
-          definedObj.set(4)
-          expect(definedObj.get()).to.equal(4)
-
-        it 'should be able to call truly private methods, when defining it as a local variable of the fn', ->
-          definedObj = def.Object ->
-            @calculate = (n)-> square(n)
-            # Private Methods
-            square = (n)-> n * n
-
-          expect(definedObj.calculate(5)).to.equal(25)
-
-      describe 'When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', ->
-        it 'should bind the method context to the original obj (parent) instead of the target obj', ->
-          definedObj = def.Object( merges: [ mixin4, ['~publicMethod'] ])
+        it 'should only include the specified attributes from included, when an attr list [] is provided', ->
+          definedObj = def.Object( merges: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6, ['*']] )
+          expect(definedObj.sum).to.exist
+          expect(definedObj.multiply).to.not.exist
           expect(definedObj._privateAttr).to.not.exist
           expect(definedObj._privateMethod).to.not.exist
-          expect(definedObj.publicMethod).to.exist
-          expect(definedObj.publicMethod(2)).to.equal(10)
-        it 'should ignore ~ when using the exclude flag', ->
-          definedObj = def.Object( merges: [ mixin4, ['!', '~_privateMethod'] ])
-          expect(definedObj._privateMethod).to.not.exist
+          expect(definedObj._privateMethod2).to.not.exist
+          expect(definedObj._privateMethod3).to.not.exist
 
-      describe 'When inheriting from multiple objects', ->
-        it 'should include/inherit attributes in the opposite order they were passed to the function, so the last ones takes
-            precedence over the first ones, when an attribute is found in more than one object', ->
+        it 'should be able to exclude an attribute from merged mixin/Class, when an "!" flag is provided e.g: ["!", "attr1", "attr2"]', ->
+          definedObj = def.Object( merges: [mixin1, ['!', 'multiply'], mixin6, ['*'] ] )
+          expect(definedObj.sum).to.exist
+          expect(definedObj.multiply).to.not.exist
 
-          # This avoids the diamond problem with multiple inheritance
-          definedObj = def.Object( merges: [ mixin1, {multiply: (x)-> x} ])
-          expect(definedObj.multiply(5)).to.equal(5)
-          definedObj2 = def.Object( merges: [ definedObj, mixin1 ])
-          expect(definedObj2.multiply(5, 5)).to.equal(25)
 
-      describe 'When redefining a function in the receiving object', ->
-        it 'should be able to call the parent obj method via the _super obj', ->
-          definedObj = def.Object
-            merges: [ mixin1 ]
-            multiply: (numbers...)->
-              @_super.multiply.apply(this, numbers) * 2
+        it 'should include all attributes from a merged mixin when an ["*"] (includeAll)  flag is provided', ->
+          definedObj = def.Object( merges: [mixin1, ['*'], mixin6, ['*'] ] )
+          expect(definedObj.sum).to.exist
+          expect(definedObj.multiply).to.exist
+          expect(definedObj.increaseByOne).to.exist
 
-          expect(definedObj.multiply(2, 2)).to.equal(8)
+        it 'should exclude all attributes from a merged mixin when an ["!"] (excludeAll) flag is provided', ->
+          definedObj = def.Object( merges: [mixin1, ['!'], mixin6, ['*'] ] )
+          expect(definedObj.sum).to.not.exist
+          expect(definedObj.multiply).to.not.exist
+          expect(definedObj.increaseByOne).to.exist
 
-      describe 'When a property is defined with a leading underscore in the passed argument object/fn', ->
-        it 'should have that property marked as nonEnumerable', ->
-          def.setNonEnum('_', true)
-          definedObj = def.Object
-            calculation: (x)-> @_pseudoPrivateSquare(x)
-            _pseudoPrivateSquare: (x)-> x * x
+        describe 'When merging multiple objects and not passing merging options to all of them', ->
+          it 'should assume an "*" flag for those that are not explicitly defined', ->
+            definedObj = def.Object( merges: [mixin1, mixin6, ['increaseByOne'] ] )
+            expect(definedObj.increaseByOne(4)).to.equal(5)
+            expect(definedObj.multiply).to.exist
 
-          expect(Object.keys(definedObj)).to.eql(['calculation'])
+            # Different order
+            definedObj2 = def.Object( merges: [mixin1, ['sum'], mixin6] )
+            expect(definedObj2.increaseByOne(4)).to.equal(5)
+            expect(definedObj2.multiply).to.not.exist
 
-        it 'should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off globally', ->
-          def.setNonEnum('_', false)
-          definedObj = def.Object
-            calculation: (x)-> @_pseudoPrivateSquare(x)
-            _pseudoPrivateSquare: (x)-> x * x
+        it 'should have the _.super property hidden and frozen (non: enumerable, configurable, writable)', ->
+          definedObj = def.Object( merges: [mixin1, mixin6])
+          expect(definedObj.propertyIsEnumerable('_super')).to.be.false
+          expect(Object.isFrozen(definedObj._super)).to.be.true
 
-          expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare'])
-          def.setNonEnum('_', true)
+        it 'should include attributes from constructor functions/classes prototypes, when constructor is excluded', ->
+          class Parent
+            someMethod: -> 'x'
 
-        it 'should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off locally', ->
-          definedObj = def.Object
-            nonEnum: ['_', false]
-            calculation: (x)-> @_pseudoPrivateSquare(x)
-            _pseudoPrivateSquare: (x)-> x * x
+          definedObj = def.Object( merges: [ Parent, ['!', 'constructor'], mixin6, ['*'] ] )
+          expect(definedObj.someMethod).to.exist
+          expect(definedObj.someMethod()).to.equal('x')
 
-          expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare'])
+        it 'should throw an error when a constructor method is defined', ->
+          defObject = ->
+            def.defObject(constructor: -> true)
 
-    describe 'def.Class method', ->
+          expect(defObject).to.throw(Error)
 
-      it 'should define a js "Class" when a constructor method is defined', ->
-        definedClass = def.Class
-          constructor:-> true
-
-        expect(definedClass).to.be.a('function')
-        expect(new definedClass).to.be.an('object')
-
-      it 'should throw an error when a constructor method is not defined', ->
-        defClass = ->
-          def.Class(someMethod: -> true)
-        expect(defClass).to.throw(Error)
-
-      describe 'When class attributes (static) are defined in a parent class', ->
-        it 'should add them to the defined class as static attributes', ->
+        it 'should not include static attributes (classAttributes) from constructor functions/classes', ->
           class Parent
             @staticMethod: -> 'y'
+          definedObj = def.Object( merges: [ Parent, ['!', 'constructor'] ])
+          expect(definedObj.staticMethod).to.not.exist
 
+        describe 'When the accessors property is defined', ->
+          describe 'In the object passed as argument to the def method (Object/Class)', ->
+            definedObj = def.Object
+              accessors: ['fullName']
+              _name: 'John'
+              _lastName: 'Doe'
+              fullName:
+                get: -> "#{@_name} #{@_lastName}"
+                set: (fullName)->
+                  nameParts = fullName.split(' ')
+                  @_name = nameParts[0]
+                  @_lastName = nameParts[1]
+
+            it 'should set the getter to the specified attribute', ->
+              expect(definedObj.fullName).to.equal('John Doe')
+
+            it 'should set the setter to the specified attribute', ->
+              definedObj.fullName
+              expect(definedObj.fullName).to.equal('John Doe')
+
+          describe 'In a fn passed as argument to the def method (Object/Class)', ->
+            definedObj = def.Object ->
+              name = 'John'
+              lastName =  'Doe'
+              @accessors = ['fullName']
+              @fullName =
+                get: -> "#{name} #{lastName}"
+                set: (fullName)->
+                  nameParts = fullName.split(' ')
+                  name = nameParts[0]
+                  lastName = nameParts[1]
+
+            it 'should set the getter to the specified attribute', ->
+              expect(definedObj.fullName).to.equal('John Doe')
+
+            it 'should set the setter to the specified attribute', ->
+              definedObj.fullName
+              expect(definedObj.fullName).to.equal('John Doe')
+
+
+        describe 'when using a function as argument instead of an obj', ->
+          it 'should be able to call truly static private attributes, when defining it as a local variable of the fn', ->
+            definedObj = def.Object ->
+              # Private Attrs
+              privateVar = 5
+              # Public Attrs
+              @set = (n)-> privateVar = n
+              @get = -> privateVar
+
+            expect(definedObj.privateVar).to.not.exist
+            expect(definedObj.get()).to.equal(5)
+            definedObj.set(4)
+            expect(definedObj.get()).to.equal(4)
+
+          it 'should be able to call truly private methods, when defining it as a local variable of the fn', ->
+            definedObj = def.Object ->
+              @calculate = (n)-> square(n)
+              # Private Methods
+              square = (n)-> n * n
+
+            expect(definedObj.calculate(5)).to.equal(25)
+
+        describe 'When an attribute(Only methods) is marked with the ~ flag in the filter array, e.g: ["~methodName"]', ->
+          it 'should bind the method context to the original obj (parent) instead of the target obj', ->
+            definedObj = def.Object( merges: [ mixin4, ['~publicMethod'] ])
+            expect(definedObj._privateAttr).to.not.exist
+            expect(definedObj._privateMethod).to.not.exist
+            expect(definedObj.publicMethod).to.exist
+            expect(definedObj.publicMethod(2)).to.equal(10)
+          it 'should ignore ~ when using the exclude flag', ->
+            definedObj = def.Object( merges: [ mixin4, ['!', '~_privateMethod'] ])
+            expect(definedObj._privateMethod).to.not.exist
+
+        describe 'When inheriting from multiple objects', ->
+          it 'should include/inherit attributes in the opposite order they were passed to the function, so the last ones takes
+              precedence over the first ones, when an attribute is found in more than one object', ->
+
+            # This avoids the diamond problem with multiple inheritance
+            definedObj = def.Object( merges: [ mixin1, {multiply: (x)-> x} ])
+            expect(definedObj.multiply(5)).to.equal(5)
+            definedObj2 = def.Object( merges: [ definedObj, mixin1 ])
+            expect(definedObj2.multiply(5, 5)).to.equal(25)
+
+        describe 'When redefining a function in the receiving object', ->
+          it 'should be able to call the parent obj method via the _super obj', ->
+            definedObj = def.Object
+              merges: [ mixin1 ]
+              multiply: (numbers...)->
+                @_super.multiply.apply(this, numbers) * 2
+
+            expect(definedObj.multiply(2, 2)).to.equal(8)
+
+        describe 'When a property is defined with a leading underscore in the passed argument object/fn', ->
+          it 'should have that property marked as nonEnumerable', ->
+            def.setNonEnum('_', true)
+            definedObj = def.Object
+              calculation: (x)-> @_pseudoPrivateSquare(x)
+              _pseudoPrivateSquare: (x)-> x * x
+
+            expect(Object.keys(definedObj)).to.eql(['calculation'])
+
+          it 'should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off globally', ->
+            def.setNonEnum('_', false)
+            definedObj = def.Object
+              calculation: (x)-> @_pseudoPrivateSquare(x)
+              _pseudoPrivateSquare: (x)-> x * x
+
+            expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare'])
+            def.setNonEnum('_', true)
+
+          it 'should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off locally', ->
+            definedObj = def.Object
+              nonEnum: ['_', false]
+              calculation: (x)-> @_pseudoPrivateSquare(x)
+              _pseudoPrivateSquare: (x)-> x * x
+
+            expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare'])
+
+      describe 'def.Class method', ->
+
+        it 'should define a js "Class" when a constructor method is defined', ->
           definedClass = def.Class
-            merges: [ Parent, ['!', 'attr'] ]
             constructor:-> true
 
-          expect(definedClass.staticMethod).to.exist
-          expect(definedClass.staticMethod()).to.equal('y')
+          expect(definedClass).to.be.a('function')
+          expect(new definedClass).to.be.an('object')
 
-          instanceOfBaked = new definedClass
-          expect(instanceOfBaked.staticMethod).to.not.exist
+        it 'should throw an error when a constructor method is not defined', ->
+          defClass = ->
+            def.Class(someMethod: -> true)
+          expect(defClass).to.throw(Error)
 
-      describe 'When any of the included element defines a constructor method', ->
-        it 'should be a constructor function that calls the constructor defined in the receiving obj ', ->
-          definedObj = def.Class
-            merges: [ {constructor: (msg)-> @msg = msg} ]
-            constructor: -> @_super.constructor(this, "I'm baked")
+        describe 'When class attributes (static) are defined in a parent class', ->
+          it 'should add them to the defined class as static attributes', ->
+            class Parent
+              @staticMethod: -> 'y'
 
-          instance = new definedObj("I'm baked")
-          expect(instance.msg).to.equal("I'm baked")
+            definedClass = def.Class
+              merges: [ Parent, ['!', 'attr'] ]
+              constructor:-> true
+
+            expect(definedClass.staticMethod).to.exist
+            expect(definedClass.staticMethod()).to.equal('y')
+
+            instanceOfBaked = new definedClass
+            expect(instanceOfBaked.staticMethod).to.not.exist
+
+        describe 'When any of the included element defines a constructor method', ->
+          it 'should be a constructor function that calls the constructor defined in the receiving obj ', ->
+            definedObj = def.Class
+              merges: [ {constructor: (msg)-> @msg = msg} ]
+              constructor: -> @_super.constructor(this, "I'm baked")
+
+            instance = new definedObj("I'm baked")
+            expect(instance.msg).to.equal("I'm baked")

@@ -63,7 +63,7 @@
 
     /** @private */
     setObj: function(propsDefiner, type) {
-      var accessors, definedObj, includedTypes;
+      var accessors, definedObj, includedTypes, prototype;
       definedObj = {};
       if (_.isFunction(propsDefiner)) {
         propsDefiner.call(definedObj);
@@ -71,6 +71,7 @@
         definedObj = propsDefiner;
       }
       includedTypes = definedObj.merges;
+      prototype = definedObj["extends"];
       accessors = definedObj.accessors;
       this.currentNonEnumConf = this.makeNonEnumSettings.apply(this, definedObj.nonEnum);
       this.checkIfValid(definedObj, type);
@@ -83,6 +84,9 @@
         return true;
       });
       this.staticMethods = {};
+      if (prototype != null) {
+        definedObj = Object.create(prototype, definedObj);
+      }
       return definedObj;
     },
 
@@ -90,7 +94,7 @@
     clearConfigKeys: function(definedObj) {
       var attr, key, reservedKeys, tempObj;
       tempObj = {};
-      reservedKeys = ['merges', 'prototype', 'accessors', 'nonEnum'];
+      reservedKeys = ['merges', 'extends', 'accessors', 'nonEnum'];
       for (key in definedObj) {
         attr = definedObj[key];
         if (!_.contains(reservedKeys, key)) {
