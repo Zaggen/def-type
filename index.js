@@ -86,8 +86,13 @@
       });
       this.staticMethods = {};
       if (prototype != null) {
-        definedObj = Object.create(prototype, definedObj);
+        if (type === 'class') {
+          this.parentPrototype = prototype;
+        } else {
+          definedObj = Object.create(prototype);
+        }
       }
+      definedObj._super = {};
       return definedObj;
     },
 
@@ -102,7 +107,6 @@
           tempObj[key] = attr;
         }
       }
-      tempObj._super = {};
       return tempObj;
     },
 
@@ -140,13 +144,12 @@
      */
     checkIfValid: function(obj, type) {
       var hasConstructor, msg;
-      console.log('checking if valid');
       hasConstructor = obj.hasOwnProperty('constructor');
       if (type === 'object' && hasConstructor) {
         msg = 'Constructor is a reserved keyword, to define classes\nwhen using def.Class method, but you are\ndefining an object';
         throw new Error(msg);
       } else if (type === 'class' && !hasConstructor) {
-        msg = 'No constructor defined in the object. To create a class a constructor must be defined as a key';
+        msg = 'No constructor defined in the object. To create a class, a constructor must be defined as a key';
         throw new Error(msg);
       }
     },
@@ -377,12 +380,17 @@
 
     /** @private */
     makeConstructor: function(obj) {
-      var classFn;
+      var classFn, classPrototype;
       classFn = obj.constructor;
-      console.log('classFn', classFn);
-      console.log('obj', obj);
-      _.merge(classFn, this.staticMethods);
-      classFn.prototype = obj;
+      classPrototype = obj;
+      classFn.prototype = classPrototype;
+      if (this.parentPrototype != null) {
+        classFn.prototype = Object.create(this.parentPrototype);
+        classFn.prototype = _.merge(classFn.prototype, classPrototype);
+      }
+      if (this.staticMethods != null) {
+        _.merge(classFn, this.staticMethods);
+      }
       return classFn;
     }
   };

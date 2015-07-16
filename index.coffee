@@ -67,7 +67,12 @@ defInc =
     definedObj = @clearConfigKeys(definedObj)
     @definedAttrs = _.mapValues(definedObj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
     @staticMethods = {}
-    if prototype? then definedObj = Object.create(prototype, definedObj)
+    if prototype?
+      if type is 'class'
+        @parentPrototype = prototype
+      else
+        definedObj = Object.create(prototype)
+    definedObj._super = {}
     return definedObj
 
   ###* @private ###
@@ -77,7 +82,6 @@ defInc =
     for key, attr of definedObj
       unless _.contains(reservedKeys, key)
         tempObj[key] = attr
-    tempObj._super = {}
     return tempObj
 
   ###* @private ###
@@ -109,7 +113,6 @@ defInc =
   * @private
   ###
   checkIfValid: (obj, type)->
-    console.log 'checking if valid'
     hasConstructor = obj.hasOwnProperty('constructor')
     if type is 'object' and hasConstructor
       msg = '''
@@ -120,7 +123,7 @@ defInc =
 
       throw new Error msg
     else if type is 'class' and not hasConstructor
-      msg = 'No constructor defined in the object. To create a class a constructor must be defined as a key'
+      msg = 'No constructor defined in the object. To create a class, a constructor must be defined as a key'
       throw new Error msg
 
   ###* @private ###
@@ -285,11 +288,16 @@ defInc =
   ###* @private ###
   makeConstructor: (obj)->
     classFn = obj.constructor
-    console.log 'classFn', classFn
-    console.log 'obj', obj
-    _.merge(classFn, @staticMethods)
-    classFn.prototype = obj
-    #fn.prototype.constructor = fn # This creates a circular reference, should check soon
+    classPrototype = obj
+    classFn.prototype = classPrototype
+
+    if @parentPrototype?
+      classFn.prototype = Object.create(@parentPrototype)
+      classFn.prototype = _.merge(classFn.prototype, classPrototype)
+
+    if @staticMethods?
+      _.merge(classFn, @staticMethods)
+
     return classFn
 
 module.exports =
