@@ -1,5 +1,13 @@
 _ = require('lodash')
 filter = require('./properties-filter')
+
+# Module Vars
+options = null # []
+mixins = null # []
+definedAttrs = null # {}
+currentNonEnumConf = null # {}
+staticMethods = null # {}
+
 defInc = {}
 defInc =
   conf:
@@ -22,8 +30,8 @@ defInc =
   ###
   define: (propsDefiner, type = 'object')->
     definedObj = @setObj(propsDefiner, type)
-    for mixin, i in @mixins
-      filter.set(@options[i])
+    for mixin, i in mixins
+      filter.set(options[i])
       # Checks each propertie and compares it against the defined (or default) filters
       # and when they are not skipped by the filter it adds them to the defined object
 
@@ -43,7 +51,9 @@ defInc =
     @markPropertiesAsNonEnum(definedObj)
 
     # Returns a pseudo-class or the currently defined object
-    return @makeType(definedObj, type)
+    type = @makeType(definedObj, type)
+    @clearData()
+    return type
 
   ###* @private ###
   setObj: (propsDefiner, type)->
@@ -57,7 +67,7 @@ defInc =
     parent = definedObj.extends
     prototype = if parent?.prototype? then parent.prototype else parent
     accessors = definedObj.accessors
-    @currentNonEnumConf = @makeNonEnumSettings.apply(@, definedObj.nonEnum)
+    currentNonEnumConf = @makeNonEnumSettings.apply(@, definedObj.nonEnum)
     @checkIfValid(definedObj, type)
     @defineAccessors(definedObj, accessors) if accessors?
 
@@ -65,8 +75,8 @@ defInc =
     @setIncludes(includedTypes)
 
     definedObj = @clearConfigKeys(definedObj)
-    @definedAttrs = _.mapValues(definedObj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
-    @staticMethods = {}
+    definedAttrs = _.mapValues(definedObj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
+    staticMethods = {}
     if prototype?
       if type is 'class'
         @parentPrototype = prototype
@@ -88,7 +98,7 @@ defInc =
   addMethod: (definedObj, key, attr, mixin)->
     fn = attr
     fn = if @useParentContext.hasOwnProperty(key) then fn.bind(mixin) else fn
-    if @definedAttrs.hasOwnProperty(key)
+    if definedAttrs.hasOwnProperty(key)
       if key is 'constructor'
         @setSuperConstructor(definedObj, fn)
       else
@@ -100,7 +110,7 @@ defInc =
   addAttribute: (definedObj, key, attr)->
   # We check if the receiving object already has an attribute with that keyName
   # if none is found or the attr is an array/obj we concat/merge it
-    if not @definedAttrs.hasOwnProperty(key)
+    if not definedAttrs.hasOwnProperty(key)
       definedObj[key] = _.cloneDeep(attr)
     else if _.isArray(attr)
       definedObj[key] = definedObj[key].concat(attr)
@@ -140,15 +150,15 @@ defInc =
 
   # Filters from the arguments the base objects/classes and the option filter arrays
   ###* @private ###
-  setIncludes: (mixins)->
-    @mixins = []
-    @options = []
+  setIncludes: (mixinList)->
+    mixins = []
+    options = []
     @useParentContext = {}
     balancer =
       mixinsCount: 0
       optionsCount: 0
     # definedObj = def.Object( merges: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6, ['*']] )
-    _.each mixins, (mixin)=>
+    _.each mixinList, (mixin)=>
       if not _.isObject(mixin)
         throw new Error 'Def-inc only accepts objects/arrays/fns e.g (fn/{} parent objects/classes or an [] with options)'
       else if @isOptionArr(mixin)
@@ -158,9 +168,9 @@ defInc =
         balancer.optionsCount++
         padding = balancer.mixinsCount - balancer.optionsCount
         for i in [0...padding]
-          @options.push(@makeOptionsObj(['*']))
+          options.push(@makeOptionsObj(['*']))
 
-        @options.push(@makeOptionsObj(mixin))
+        options.push(@makeOptionsObj(mixin))
 
       else if _.isFunction(mixin)
         # When a fn is passed, we assume is a constructor, so we copy the properties in its prototype,
@@ -175,11 +185,11 @@ defInc =
           '__static__',
           value: _.merge({}, fn)
           enumerable: false
-        @mixins.push(obj)
+        mixins.push(obj)
         balancer.mixinsCount++
       else
         # If it is a simple object we just add it to our array
-        @mixins.push(mixin)
+        mixins.push(mixin)
         balancer.mixinsCount++
 
   ###* @private ###
@@ -239,10 +249,10 @@ defInc =
   pushStaticMethods: (mixin)->
     for own key, attr of mixin.__static__
       unless filter.skip(key)
-        @staticMethods[key] = attr
+        staticMethods[key] = attr
 
   markPropertiesAsNonEnum: (definedObj)->
-    nonEnum = @currentNonEnumConf
+    nonEnum = currentNonEnumConf
     if nonEnum.enabled
       propertyNames = Object.getOwnPropertyNames(definedObj)
       for propertyName in propertyNames
@@ -295,10 +305,18 @@ defInc =
       classFn.prototype = Object.create(@parentPrototype)
       classFn.prototype = _.merge(classFn.prototype, classPrototype)
 
-    if @staticMethods?
-      _.merge(classFn, @staticMethods)
+    if staticMethods?
+      _.merge(classFn, staticMethods)
 
     return classFn
+
+  clearData: ->
+    # Module Vars
+    options = null # []
+    mixins = null # []
+    definedAttrs = null # {}
+    currentNonEnumConf = null # {}
+    staticMethods = null # {}
 
 module.exports =
   Class: defInc.defClass
