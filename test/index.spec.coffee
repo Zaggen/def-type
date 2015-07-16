@@ -99,12 +99,6 @@ describe 'def-inc Module', ->
           def.setNonEnum('_', true)
 
     describe 'The defined object', ->
-
-      describe 'When using the "extends" directive', ->
-        it 'should have all properties from the passed mixin via prototype', ->
-          definedObj = def.Object( extends: mixin1 )
-          expect(definedObj.__proto__).to.have.all.keys('sum', 'multiply')
-
       describe 'When using the "merges" directive', ->
 
         it 'should have all properties from the included (merged) mixins', ->
@@ -361,3 +355,31 @@ describe 'def-inc Module', ->
 
             instance = new definedObj("I'm baked")
             expect(instance.msg).to.equal("I'm baked")
+
+        xdescribe 'When using the "extends" directive', ->
+          User = def.Class
+            constructor: (@name)->
+            getName: -> @name
+
+          describe 'When defining an object', ->
+            it 'should have all properties from the passed mixin via prototype', ->
+              definedObj = def.Object( extends: mixin1 )
+              expect(definedObj.__proto__).to.have.all.keys('sum', 'multiply')
+
+            it 'should have all properties from the passed Class prototype with out specifying', ->
+              writer = def.Object(extends: User)
+              expect(writer.__proto__).to.have.all.keys('constructor', 'getName')
+
+          ###describe 'When defining a class', ->
+            Admin = def.Class
+              extends: User
+              constructor: (@name, @clearanceLvl)->
+              someMethod: ->
+
+            #getName: -> 'Admin:' + @_super.getName()
+
+            it 'should have all properties from the passed Class', ->
+              expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName')
+
+            it 'should have access to the parent Class methods via the @_super obj', ->
+              expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName')###

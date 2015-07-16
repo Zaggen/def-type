@@ -142,15 +142,6 @@
         });
       });
       return describe('The defined object', function() {
-        describe('When using the "extends" directive', function() {
-          return it('should have all properties from the passed mixin via prototype', function() {
-            var definedObj;
-            definedObj = def.Object({
-              "extends": mixin1
-            });
-            return expect(definedObj.__proto__).to.have.all.keys('sum', 'multiply');
-          });
-        });
         describe('When using the "merges" directive', function() {
           it('should have all properties from the included (merged) mixins', function() {
             var definedObj;
@@ -537,7 +528,7 @@
               return expect(instanceOfBaked.staticMethod).to.not.exist;
             });
           });
-          return describe('When any of the included element defines a constructor method', function() {
+          describe('When any of the included element defines a constructor method', function() {
             return it('should be a constructor function that calls the constructor defined in the receiving obj ', function() {
               var definedObj, instance;
               definedObj = def.Class({
@@ -555,6 +546,48 @@
               instance = new definedObj("I'm baked");
               return expect(instance.msg).to.equal("I'm baked");
             });
+          });
+          return xdescribe('When using the "extends" directive', function() {
+            var User;
+            User = def.Class({
+              constructor: function(name1) {
+                this.name = name1;
+              },
+              getName: function() {
+                return this.name;
+              }
+            });
+            return describe('When defining an object', function() {
+              it('should have all properties from the passed mixin via prototype', function() {
+                var definedObj;
+                definedObj = def.Object({
+                  "extends": mixin1
+                });
+                return expect(definedObj.__proto__).to.have.all.keys('sum', 'multiply');
+              });
+              return it('should have all properties from the passed Class prototype with out specifying', function() {
+                var writer;
+                writer = def.Object({
+                  "extends": User
+                });
+                return expect(writer.__proto__).to.have.all.keys('constructor', 'getName');
+              });
+            });
+
+            /*describe 'When defining a class', ->
+              Admin = def.Class
+                extends: User
+                constructor: (@name, @clearanceLvl)->
+                someMethod: ->
+            
+              #getName: -> 'Admin:' + @_super.getName()
+            
+              it 'should have all properties from the passed Class', ->
+                expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName')
+            
+              it 'should have access to the parent Class methods via the @_super obj', ->
+                expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName')
+             */
           });
         });
       });
