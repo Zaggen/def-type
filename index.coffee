@@ -2,19 +2,20 @@ _ = require('lodash')
 filter = require('./properties-filter')
 
 # Module Vars
+defInc = {}
 options = null # []
 mixins = null # []
 definedAttrs = null # {}
 currentNonEnumConf = null # {}
 staticMethods = null # {}
+parentPrototype = null # {}
+useParentContext = null # {}
+conf =
+  nonEnum:
+    leadingChar: '_'
+    enabled: true
 
-defInc = {}
 defInc =
-  conf:
-    nonEnum:
-      leadingChar: '_'
-      enabled: true
-
   defObject: (obj)->
     defInc.define(obj, 'object')
 
@@ -40,7 +41,7 @@ defInc =
         unless filter.skip(propertyName)
           property = mixin[propertyName]
           if _.isFunction(property)
-            @addMethod(definedObj, propertyName, property, mixin)
+            @addMethod(definedObj, propertyName, property, mixin, type)
           else
             @addAttribute(definedObj, propertyName, property)
 
@@ -77,13 +78,18 @@ defInc =
     definedObj = @clearConfigKeys(definedObj)
     definedAttrs = _.mapValues(definedObj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
     staticMethods = {}
-    if prototype?
+    definedObj._super = {}
+
+    # If the defined object/class extends another object/class
+    if parent?
       if type is 'class'
-        @parentPrototype = prototype
+        parentPrototype = prototype
+        if _.isFunction(parent)
+          definedObj._super = prototype.constructor
       else
         attachedProto = Object.create(prototype)
         definedObj = _.merge(attachedProto, definedObj)
-    definedObj._super = {}
+
     return definedObj
 
   ###* @private ###
@@ -96,14 +102,11 @@ defInc =
     return tempObj
 
   ###* @private ###
-  addMethod: (definedObj, key, attr, mixin)->
+  addMethod: (definedObj, key, attr, mixin, type)->
     fn = attr
-    fn = if @useParentContext.hasOwnProperty(key) then fn.bind(mixin) else fn
+    fn = if useParentContext.hasOwnProperty(key) then fn.bind(mixin) else fn
     if definedAttrs.hasOwnProperty(key)
-      if key is 'constructor'
-        @setSuperConstructor(definedObj, fn)
-      else
-        definedObj._super[key] = fn
+      definedObj._super[key] = fn unless key is 'constructor'
     else
       definedObj[key] = definedObj._super[key] = fn
 
@@ -142,19 +145,12 @@ defInc =
     for propertyName in accessorsList
       Object.defineProperty(obj, propertyName, obj[propertyName])
 
-  ###*
-  * @TODO Needs to support multiple constructor calling
-  * @private
-  ###
-  setSuperConstructor: (target, constructor)->
-    target._super.constructor = (superArgs...)-> constructor.apply(superArgs.shift(), superArgs)
-
   # Filters from the arguments the base objects/classes and the option filter arrays
   ###* @private ###
   setIncludes: (mixinList)->
     mixins = []
     options = []
-    @useParentContext = {}
+    useParentContext = {}
     balancer =
       mixinsCount: 0
       optionsCount: 0
@@ -233,7 +229,7 @@ defInc =
           console.warn 'The ~ should only be used when including methods, not excluding them'
         attrName = attrName.replace('~', '')
         newAttrNames.push(attrName)
-        @useParentContext[attrName] = true
+        useParentContext[attrName] = true
       else
         newAttrNames.push(attrName)
     return newAttrNames
@@ -276,7 +272,7 @@ defInc =
           enabled: enabledStatus
       }
     else
-      return @conf.nonEnum
+      return conf.nonEnum
 
   ###* @private ###
   freezeProp: (obj, attributeName)->
@@ -302,8 +298,8 @@ defInc =
     classPrototype = obj
     classFn.prototype = classPrototype
 
-    if @parentPrototype?
-      classFn.prototype = Object.create(@parentPrototype)
+    if parentPrototype?
+      classFn.prototype = Object.create(parentPrototype)
       classFn.prototype = _.merge(classFn.prototype, classPrototype)
 
     if staticMethods?
@@ -318,6 +314,7 @@ defInc =
     definedAttrs = null # {}
     currentNonEnumConf = null # {}
     staticMethods = null # {}
+    useParentContext = null # {}
 
 module.exports =
   Class: defInc.defClass
@@ -328,7 +325,7 @@ module.exports =
 
   # Shortcuts for nonEnum
   setNonEnum: ->
-    defInc.conf = defInc.makeNonEnumSettings(arguments[0], arguments[1])
+    conf = defInc.makeNonEnumSettings(arguments[0], arguments[1])
 
-  getNonEnum: (conf)->
-    defInc.conf.nonEnum
+  getNonEnum: ->
+    conf.nonEnum
