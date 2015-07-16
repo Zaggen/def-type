@@ -99,6 +99,21 @@ describe 'def-inc Module', ->
           def.setNonEnum('_', true)
 
     describe 'The defined object', ->
+
+      describe 'When using the "extends" directive', ->
+        it 'should have all properties from the passed mixin via prototype', ->
+          definedObj = def.Object( extends: mixin1 )
+          expect(definedObj.__proto__).to.have.all.keys('sum', 'multiply')
+
+        it 'should have all properties from the passed Class prototype with out specifying', ->
+          class User
+            constructor: (@name)->
+            getName: -> @name
+
+          writer = def.Object(extends: User)
+          console.log writer.__proto__
+          expect(writer.__proto__).to.have.all.keys('constructor', 'getName')
+
       describe 'When using the "merges" directive', ->
 
         it 'should have all properties from the included (merged) mixins', ->
@@ -122,9 +137,9 @@ describe 'def-inc Module', ->
             # Lets reset mixin5
             mixin5.preferences = {fullScreen: true}
 
-        describe 'When the included mixins or the currently defined Object/Class has a name conflict on an attribute(data)', ->
+        describe 'When the merged mixins or the currently defined Object/Class has a name conflict on an attribute(data)', ->
           it 'should merge them with the following precedence:
-              From left to right in the included mixins list, being the last one the one with more precedence,
+              From left to right in the merges mixins list, being the last one the one with more precedence,
               only surpassed by the attribute defined in the current Object/Class itself', ->
 
             definedObj = def.Object
@@ -137,8 +152,8 @@ describe 'def-inc Module', ->
             expect(definedObj.preferences.fullScreen).to.be.true
             expect(definedObj.preferences.autoPlay).to.be.true
 
-        it 'should only include the specified attributes from included, when an attr list [] is provided', ->
-          definedObj = def.Object( merges: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6, ['*']] )
+        it 'should only include the specified attributes from the merged obj/class, when an attr list [] is provided', ->
+          definedObj = def.Object( merges: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6] )
           expect(definedObj.sum).to.exist
           expect(definedObj.multiply).to.not.exist
           expect(definedObj._privateAttr).to.not.exist
@@ -347,7 +362,7 @@ describe 'def-inc Module', ->
             instanceOfBaked = new definedClass
             expect(instanceOfBaked.staticMethod).to.not.exist
 
-        describe 'When any of the included element defines a constructor method', ->
+        describe 'When any of the merged element defines a constructor method', ->
           it 'should be a constructor function that calls the constructor defined in the receiving obj ', ->
             definedObj = def.Class
               merges: [ {constructor: (msg)-> @msg = msg} ]
@@ -356,7 +371,8 @@ describe 'def-inc Module', ->
             instance = new definedObj("I'm baked")
             expect(instance.msg).to.equal("I'm baked")
 
-        xdescribe 'When using the "extends" directive', ->
+        describe 'When using the "extends" directive', ->
+
           User = def.Class
             constructor: (@name)->
             getName: -> @name

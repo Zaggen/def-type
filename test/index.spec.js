@@ -142,6 +142,35 @@
         });
       });
       return describe('The defined object', function() {
+        describe('When using the "extends" directive', function() {
+          it('should have all properties from the passed mixin via prototype', function() {
+            var definedObj;
+            definedObj = def.Object({
+              "extends": mixin1
+            });
+            return expect(definedObj.__proto__).to.have.all.keys('sum', 'multiply');
+          });
+          return it('should have all properties from the passed Class prototype with out specifying', function() {
+            var User, writer;
+            User = (function() {
+              function User(name1) {
+                this.name = name1;
+              }
+
+              User.prototype.getName = function() {
+                return this.name;
+              };
+
+              return User;
+
+            })();
+            writer = def.Object({
+              "extends": User
+            });
+            console.log(writer.__proto__);
+            return expect(writer.__proto__).to.have.all.keys('constructor', 'getName');
+          });
+        });
         describe('When using the "merges" directive', function() {
           it('should have all properties from the included (merged) mixins', function() {
             var definedObj;
@@ -175,8 +204,8 @@
               };
             });
           });
-          describe('When the included mixins or the currently defined Object/Class has a name conflict on an attribute(data)', function() {
-            return it('should merge them with the following precedence: From left to right in the included mixins list, being the last one the one with more precedence, only surpassed by the attribute defined in the current Object/Class itself', function() {
+          describe('When the merged mixins or the currently defined Object/Class has a name conflict on an attribute(data)', function() {
+            return it('should merge them with the following precedence: From left to right in the merges mixins list, being the last one the one with more precedence, only surpassed by the attribute defined in the current Object/Class itself', function() {
               var definedObj;
               definedObj = def.Object({
                 merges: [mixin5, mixin6],
@@ -192,10 +221,10 @@
               return expect(definedObj.preferences.autoPlay).to.be["true"];
             });
           });
-          it('should only include the specified attributes from included, when an attr list [] is provided', function() {
+          it('should only include the specified attributes from the merged obj/class, when an attr list [] is provided', function() {
             var definedObj;
             definedObj = def.Object({
-              merges: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6, ['*']]
+              merges: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6]
             });
             expect(definedObj.sum).to.exist;
             expect(definedObj.multiply).to.not.exist;
@@ -528,7 +557,7 @@
               return expect(instanceOfBaked.staticMethod).to.not.exist;
             });
           });
-          describe('When any of the included element defines a constructor method', function() {
+          describe('When any of the merged element defines a constructor method', function() {
             return it('should be a constructor function that calls the constructor defined in the receiving obj ', function() {
               var definedObj, instance;
               definedObj = def.Class({
@@ -547,7 +576,7 @@
               return expect(instance.msg).to.equal("I'm baked");
             });
           });
-          return xdescribe('When using the "extends" directive', function() {
+          return describe('When using the "extends" directive', function() {
             var User;
             User = def.Class({
               constructor: function(name1) {
