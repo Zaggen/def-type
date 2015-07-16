@@ -74,7 +74,7 @@
 
     /** @private */
     setObj: function(propsDefiner, type) {
-      var accessors, definedObj, includedTypes, parent, prototype;
+      var accessors, attachedProto, definedObj, includedTypes, parent, prototype;
       definedObj = {};
       if (_.isFunction(propsDefiner)) {
         propsDefiner.call(definedObj);
@@ -100,7 +100,8 @@
         if (type === 'class') {
           this.parentPrototype = prototype;
         } else {
-          definedObj = Object.create(prototype);
+          attachedProto = Object.create(prototype);
+          definedObj = _.merge(attachedProto, definedObj);
         }
       }
       definedObj._super = {};

@@ -81,7 +81,8 @@ defInc =
       if type is 'class'
         @parentPrototype = prototype
       else
-        definedObj = Object.create(prototype)
+        attachedProto = Object.create(prototype)
+        definedObj = _.merge(attachedProto, definedObj)
     definedObj._super = {}
     return definedObj
 
