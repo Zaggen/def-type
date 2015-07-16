@@ -63,7 +63,7 @@
 
     /** @private */
     setObj: function(propsDefiner, type) {
-      var accessors, definedObj, includedTypes, prototype;
+      var accessors, definedObj, includedTypes, parent, prototype;
       definedObj = {};
       if (_.isFunction(propsDefiner)) {
         propsDefiner.call(definedObj);
@@ -71,7 +71,8 @@
         definedObj = propsDefiner;
       }
       includedTypes = definedObj.merges;
-      prototype = definedObj["extends"];
+      parent = definedObj["extends"];
+      prototype = (parent != null ? parent.prototype : void 0) != null ? parent.prototype : parent;
       accessors = definedObj.accessors;
       this.currentNonEnumConf = this.makeNonEnumSettings.apply(this, definedObj.nonEnum);
       this.checkIfValid(definedObj, type);
@@ -139,12 +140,13 @@
      */
     checkIfValid: function(obj, type) {
       var hasConstructor, msg;
+      console.log('checking if valid');
       hasConstructor = obj.hasOwnProperty('constructor');
       if (type === 'object' && hasConstructor) {
         msg = 'Constructor is a reserved keyword, to define classes\nwhen using def.Class method, but you are\ndefining an object';
         throw new Error(msg);
       } else if (type === 'class' && !hasConstructor) {
-        msg('No constructor defined in the object. To create a class a constructor must be defined as a key');
+        msg = 'No constructor defined in the object. To create a class a constructor must be defined as a key';
         throw new Error(msg);
       }
     },
@@ -377,6 +379,8 @@
     makeConstructor: function(obj) {
       var classFn;
       classFn = obj.constructor;
+      console.log('classFn', classFn);
+      console.log('obj', obj);
       _.merge(classFn, this.staticMethods);
       classFn.prototype = obj;
       return classFn;
