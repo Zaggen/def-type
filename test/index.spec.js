@@ -165,10 +165,12 @@
 
             })();
             writer = def.Object({
-              "extends": User
+              "extends": User,
+              name: 'Jake',
+              write: function() {}
             });
-            console.log(writer.__proto__);
-            return expect(writer.__proto__).to.have.all.keys('constructor', 'getName');
+            expect(writer.getName()).to.equal('Jake');
+            return expect(writer.write).to.exist;
           });
         });
         describe('When using the "merges" directive', function() {
@@ -453,7 +455,7 @@
               return expect(definedObj2.multiply(5, 5)).to.equal(25);
             });
           });
-          describe('When redefining a function in the receiving object', function() {
+          describe('When overriding a function in the defined object', function() {
             return it('should be able to call the parent obj method via the _super obj', function() {
               var definedObj;
               definedObj = def.Object({
@@ -532,91 +534,90 @@
             };
             return expect(defClass).to["throw"](Error);
           });
-          describe('When class attributes (static) are defined in a parent class', function() {
-            return it('should add them to the defined class as static attributes', function() {
-              var Parent, definedClass, instanceOfBaked;
-              Parent = (function() {
-                function Parent() {}
+          describe('When using the "merges" directive', function() {
+            describe('When class attributes (static) are defined in a parent class', function() {
+              return it('should add them to the defined class as static attributes', function() {
+                var Parent, definedClass, instanceOfBaked;
+                Parent = (function() {
+                  function Parent() {}
 
-                Parent.staticMethod = function() {
-                  return 'y';
-                };
+                  Parent.staticMethod = function() {
+                    return 'y';
+                  };
 
-                return Parent;
+                  return Parent;
 
-              })();
-              definedClass = def.Class({
-                merges: [Parent, ['!', 'attr']],
-                constructor: function() {
-                  return true;
-                }
-              });
-              expect(definedClass.staticMethod).to.exist;
-              expect(definedClass.staticMethod()).to.equal('y');
-              instanceOfBaked = new definedClass;
-              return expect(instanceOfBaked.staticMethod).to.not.exist;
-            });
-          });
-          describe('When any of the merged element defines a constructor method', function() {
-            return it('should be a constructor function that calls the constructor defined in the receiving obj ', function() {
-              var definedObj, instance;
-              definedObj = def.Class({
-                merges: [
-                  {
-                    constructor: function(msg) {
-                      return this.msg = msg;
-                    }
+                })();
+                definedClass = def.Class({
+                  merges: [Parent, ['!', 'attr']],
+                  constructor: function() {
+                    return true;
                   }
-                ],
-                constructor: function() {
-                  return this._super.constructor(this, "I'm baked");
-                }
+                });
+                expect(definedClass.staticMethod).to.exist;
+                expect(definedClass.staticMethod()).to.equal('y');
+                instanceOfBaked = new definedClass;
+                return expect(instanceOfBaked.staticMethod).to.not.exist;
               });
-              instance = new definedObj("I'm baked");
-              return expect(instance.msg).to.equal("I'm baked");
+            });
+            return describe('When any of the merged element defines a constructor method', function() {
+              return describe('it should not be available via @_super fn call', function() {
+                var definedClass, instance, superClass;
+                superClass = def.Class({
+                  constructor: function(msg) {
+                    return this.msg = msg;
+                  }
+                });
+                definedClass = def.Class({
+                  merges: [superClass],
+                  constructor: function() {
+                    return superClass.call(this, "I'm baked");
+                  }
+                });
+                instance = new definedClass("I'm baked");
+                expect(instance.msg).to.equal("I'm baked");
+                return expect(instance._super).to.be.an("object");
+              });
             });
           });
           return describe('When using the "extends" directive', function() {
             var User;
             User = def.Class({
-              constructor: function(name1) {
-                this.name = name1;
+              constructor: function(name) {
+                return this.userName = name;
               },
               getName: function() {
-                return this.name;
+                return this.userName;
               }
             });
-            return describe('When defining an object', function() {
-              it('should have all properties from the passed mixin via prototype', function() {
-                var definedObj;
-                definedObj = def.Object({
-                  "extends": mixin1
-                });
-                return expect(definedObj.__proto__).to.have.all.keys('sum', 'multiply');
+            return describe('When defining a class', function() {
+              var Admin;
+              Admin = def.Class({
+                "extends": User,
+                constructor: function(name, clearanceLvl) {
+                  this.clearanceLvl = clearanceLvl;
+                  return this._super(name);
+                },
+                someMethod: function() {
+                  return this._super.getName.call(this);
+                }
               });
-              return it('should have all properties from the passed Class prototype with out specifying', function() {
-                var writer;
-                writer = def.Object({
-                  "extends": User
-                });
-                return expect(writer.__proto__).to.have.all.keys('constructor', 'getName');
+              it('should have all properties from the passed Class', function() {
+                return expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName');
+              });
+              it('should have access to the parent Class constructor via the @_super fn', function() {
+                var adminUser;
+                adminUser = new Admin('zaggen', 5);
+                expect(adminUser._super).to.be.a('function');
+                expect(adminUser.userName).to.equal('zaggen');
+                return expect(adminUser.someMethod()).to.equal('zaggen');
+              });
+              return it('should have access to the parent Class methods via the @_super obj', function() {
+                var adminUser;
+                adminUser = new Admin('zaggen', 5);
+                return expect(adminUser.someMethod()).to.equal('zaggen');
               });
             });
-
-            /*describe 'When defining a class', ->
-              Admin = def.Class
-                extends: User
-                constructor: (@name, @clearanceLvl)->
-                someMethod: ->
-            
-              #getName: -> 'Admin:' + @_super.getName()
-            
-              it 'should have all properties from the passed Class', ->
-                expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName')
-            
-              it 'should have access to the parent Class methods via the @_super obj', ->
-                expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName')
-             */
           });
         });
       });

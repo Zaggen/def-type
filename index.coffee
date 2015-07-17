@@ -1,6 +1,9 @@
 _ = require('lodash')
 filter = require('./properties-filter')
 
+#helpers
+log = console.log
+
 # Module Vars
 defInc = {}
 options = null # []
@@ -86,6 +89,14 @@ defInc =
         parentPrototype = prototype
         if _.isFunction(parent)
           definedObj._super = prototype.constructor
+
+          # If __proto__ is available, we attach the parent.prototype to the _super fn
+          if Object.__proto__?
+            definedObj._super.__proto__ = prototype
+          else
+            for propName, prop of prototype
+              if _.isFunction(prop)
+                definedObj._super[propName] = prop
       else
         attachedProto = Object.create(prototype)
         definedObj = _.merge(attachedProto, definedObj)
@@ -293,14 +304,17 @@ defInc =
     if type is 'class' then @makeConstructor(definedObj) else definedObj
 
   ###* @private ###
-  makeConstructor: (obj)->
-    classFn = obj.constructor
-    classPrototype = obj
-    classFn.prototype = classPrototype
+  makeConstructor: (classPrototype)->
+    classFn = classPrototype.constructor
+    classFn:: = classPrototype
+
+    log 'classFn.prototype._super', classFn.prototype._super
+    #log 'classFn.prototype._super.getName', classPrototype._super.getName
 
     if parentPrototype?
-      classFn.prototype = Object.create(parentPrototype)
-      classFn.prototype = _.merge(classFn.prototype, classPrototype)
+      classFn:: = Object.create(parentPrototype)
+      classFn:: = _.merge(classFn.prototype, classPrototype)
+      classFn::_super = classPrototype._super
 
     if staticMethods?
       _.merge(classFn, staticMethods)

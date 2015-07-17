@@ -110,9 +110,13 @@ describe 'def-inc Module', ->
             constructor: (@name)->
             getName: -> @name
 
-          writer = def.Object(extends: User)
-          console.log writer.__proto__
-          expect(writer.__proto__).to.have.all.keys('constructor', 'getName')
+          writer = def.Object
+            extends: User
+            name: 'Jake'
+            write: ->
+
+          expect(writer.getName()).to.equal('Jake')
+          expect(writer.write).to.exist
 
       describe 'When using the "merges" directive', ->
 
@@ -298,7 +302,7 @@ describe 'def-inc Module', ->
             definedObj2 = def.Object( merges: [ definedObj, mixin1 ])
             expect(definedObj2.multiply(5, 5)).to.equal(25)
 
-        describe 'When redefining a function in the receiving object', ->
+        describe 'When overriding a function in the defined object', ->
           it 'should be able to call the parent obj method via the _super obj', ->
             definedObj = def.Object
               merges: [ mixin1 ]
@@ -347,55 +351,62 @@ describe 'def-inc Module', ->
             def.Class(someMethod: -> true)
           expect(defClass).to.throw(Error)
 
-        describe 'When class attributes (static) are defined in a parent class', ->
-          it 'should add them to the defined class as static attributes', ->
-            class Parent
-              @staticMethod: -> 'y'
+        describe 'When using the "merges" directive', ->
 
-            definedClass = def.Class
-              merges: [ Parent, ['!', 'attr'] ]
-              constructor:-> true
+          describe 'When class attributes (static) are defined in a parent class', ->
+            it 'should add them to the defined class as static attributes', ->
+              class Parent
+                @staticMethod: -> 'y'
 
-            expect(definedClass.staticMethod).to.exist
-            expect(definedClass.staticMethod()).to.equal('y')
+              definedClass = def.Class
+                merges: [ Parent, ['!', 'attr'] ]
+                constructor:-> true
 
-            instanceOfBaked = new definedClass
-            expect(instanceOfBaked.staticMethod).to.not.exist
+              expect(definedClass.staticMethod).to.exist
+              expect(definedClass.staticMethod()).to.equal('y')
 
-        describe 'When any of the merged element defines a constructor method', ->
-          it 'should be a constructor function that calls the constructor defined in the receiving obj ', ->
-            definedObj = def.Class
-              merges: [ {constructor: (msg)-> @msg = msg} ]
-              constructor: -> @_super.constructor(this, "I'm baked")
+              instanceOfBaked = new definedClass
+              expect(instanceOfBaked.staticMethod).to.not.exist
 
-            instance = new definedObj("I'm baked")
-            expect(instance.msg).to.equal("I'm baked")
+          describe 'When any of the merged element defines a constructor method', ->
+            describe 'it should not be available via @_super fn call', ->
+              superClass = def.Class
+                constructor: (msg)-> @msg = msg
+
+              definedClass = def.Class
+                merges: [superClass]
+                constructor: ->
+                  superClass.call(this, "I'm baked")
+
+              instance = new definedClass("I'm baked")
+              expect(instance.msg).to.equal("I'm baked")
+              expect(instance._super).to.be.an("object")
 
         describe 'When using the "extends" directive', ->
 
           User = def.Class
-            constructor: (@name)->
-            getName: -> @name
+            constructor: (name)->
+              @userName = name
+            getName: ->
+              return @userName
 
-          describe 'When defining an object', ->
-            it 'should have all properties from the passed mixin via prototype', ->
-              definedObj = def.Object( extends: mixin1 )
-              expect(definedObj.__proto__).to.have.all.keys('sum', 'multiply')
-
-            it 'should have all properties from the passed Class prototype with out specifying', ->
-              writer = def.Object(extends: User)
-              expect(writer.__proto__).to.have.all.keys('constructor', 'getName')
-
-          ###describe 'When defining a class', ->
+          describe 'When defining a class', ->
             Admin = def.Class
               extends: User
-              constructor: (@name, @clearanceLvl)->
+              constructor: (name, @clearanceLvl)->
+                @_super(name)
               someMethod: ->
-
-            #getName: -> 'Admin:' + @_super.getName()
+                @_super.getName.call(@)
 
             it 'should have all properties from the passed Class', ->
               expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName')
 
+            it 'should have access to the parent Class constructor via the @_super fn', ->
+              adminUser = new Admin('zaggen', 5)
+              expect(adminUser._super).to.be.a('function')
+              expect(adminUser.userName).to.equal('zaggen')
+              expect(adminUser.someMethod()).to.equal('zaggen')
+
             it 'should have access to the parent Class methods via the @_super obj', ->
-              expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName')###
+              adminUser = new Admin('zaggen', 5)
+              expect(adminUser.someMethod()).to.equal('zaggen')
