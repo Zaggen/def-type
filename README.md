@@ -147,7 +147,7 @@ console.log user.fullName # Logs 'Max Payne'
  their original objects.
 * A `_super` object is created when extending the receivingObj, it will contain all of the inherited(extended and merged)
  methods into it. This is useful when you want to override an inherited parent method but you still want to have access
- to the original functionality.
+ to the original functionality. Methods that makes changes to instance variables should be called using .call(this)
 * You can define 'classes' very easy, and extend them with out ,manually adding the parent class prototype to the 
 currently defined class and setting back the original constructor, or adding methods to the prototype one by one.
 
