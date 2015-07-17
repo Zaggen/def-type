@@ -307,10 +307,6 @@ defInc =
   makeConstructor: (classPrototype)->
     classFn = classPrototype.constructor
     classFn:: = classPrototype
-
-    log 'classFn.prototype._super', classFn.prototype._super
-    #log 'classFn.prototype._super.getName', classPrototype._super.getName
-
     if parentPrototype?
       classFn:: = Object.create(parentPrototype)
       classFn:: = _.merge(classFn.prototype, classPrototype)

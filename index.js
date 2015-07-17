@@ -400,7 +400,6 @@
       var classFn;
       classFn = classPrototype.constructor;
       classFn.prototype = classPrototype;
-      log('classFn.prototype._super', classFn.prototype._super);
       if (parentPrototype != null) {
         classFn.prototype = Object.create(parentPrototype);
         classFn.prototype = _.merge(classFn.prototype, classPrototype);
