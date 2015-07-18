@@ -4,7 +4,10 @@
 **This module is in active development, and still in beta, do not use in production.... yet**
 
 ## A Multiple composable inheritance module for js
-def-inc is an npm module that allows you to easily define Objects and classes that can inherit from a single parent object by adding it to the prototype chain of the define object (via the 'extends' directive) or from multiple objects or "classes" (via 'merges' directive), and lets you to choose which attributes you merge/inherit (Pick/omit/delegate). It also allows you to work with true shared privacy with almost the same syntax.
+def-inc is an npm module that allows you to easily define Objects and classes that can inherit from a single parent 
+object by adding it to the prototype chain of the defined Object/Class (via the 'extends' directive) or from multiple 
+objects or "classes" (via 'merges' directive), which also lets you to choose which attributes you merge(copy).
+It also allows you to work with true shared privacy with almost the same syntax.
  
 ## Installation
 `npm install def-inc --save`
@@ -75,7 +78,7 @@ Here is a working example using this option:
 You can inherit from multiple "Classes" or objects, or a mixture of both. 
 ```coffeescript
 Admin = def.Class
-  merge: [ accountTraits, ['logIn', 'logOut'],  User] # here User is a class
+  merges: [ accountTraits, ['logIn', 'logOut'],  User] # here User is a class
   constructor: (@name)->
     @privileges = 'all'
   deleteUser: ->
@@ -154,7 +157,7 @@ currently defined class and setting back the original constructor, or adding met
 ## Merge options
 When you pass an options array after the object to be merge, e.g:
 ```coffeescript
-  merge: [ accountTraits, ['logIn', 'logOut'],  User]
+  merges: [ accountTraits, ['logIn', 'logOut'],  User]
 ```
 You can specify which properties you merge into the defined obj/class, by combining the property names you want to
 add or exclude from the mixin/class and/or a few optional flags (`!`, `*`,`~`).
@@ -194,7 +197,7 @@ spriteTraits = def.Mixin
     # Updates sprite
     
 gameCharacter = def.Object
-  merge: [movableTraits, spriteTraits, hardObjTraits]
+  merges: [movableTraits, spriteTraits, hardObjTraits]
   _exp: 0
   lvlUp: (newExp)->
     @_increaseExp(newExp) # Private Method Call
@@ -210,13 +213,13 @@ killableTraits = def.Mixin
     #Set hp to 0, and show dead animation
 
 Player = def.Class
-  merge: [ gameCharacter, ['~lvlUp'], killableTraits, ['kill'] ]
+  merges: [ gameCharacter, ['~lvlUp'], killableTraits, ['kill'] ]
   constructor: (playerName)->
     @msg = "#{playerName} is ready to kill some goblins!"
   sayMsg: ->
     console.log @msg
   kill: ->
-    @_super.kill()
+    @_super.kill.call(@) # Unless kill is a pure fn with no side effects, it should be called using call or apply
     console.log 'Game Over'
   
 zaggen = new Player('Zaggen')
