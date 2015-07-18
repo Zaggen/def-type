@@ -148,9 +148,10 @@ console.log user.fullName # Logs 'Max Payne'
 * Merge properties from other objects/classes into the defined element  (Using merges).
 * You have composite options, meaning you can pick which attributes you merge and even set the context of methods to
  their original objects.
-* A `_super` object is created when extending the receivingObj, it will contain all of the inherited(extended and merged)
- methods into it. This is useful when you want to override an inherited parent method but you still want to have access
- to the original functionality. Methods that makes changes to instance variables should be called using .call(this)
+* A `_super` object is created when the defined type is being extended or merged, it will contain all of the inherited
+(extended and merged) methods into it. This is useful when you want to override an inherited parent method but you still
+want to have access to the original functionality. Methods that makes changes to instance members should be called 
+using `.call(this, arg1, arg2)` or `.apply(this,[args])`
 * You can define 'classes' very easy, and extend them with out ,manually adding the parent class prototype to the 
 currently defined class and setting back the original constructor, or adding methods to the prototype one by one.
 
@@ -164,11 +165,11 @@ add or exclude from the mixin/class and/or a few optional flags (`!`, `*`,`~`).
 * This are the options in details
   - `['attr1', 'attr2']` Will only include those selected attributes from the corresponding object
   - `['~publicMethod']` Delegate; Will only include those selected method and it will bind its context to the original
-   baseObject. This is useful, when you have an object with "public" methods that make use of internal "private" methods,
+   object/Class. This is useful, when you have an object with "public" methods that make use of internal "private" methods,
    and you don't want to inherit those, this way this inherited method will be able to call all the needed attributes
    and methods from its original obj. Use this sparingly since it will bite you if you try to use it incorrectly.
-   Just remember that the inherit method will not have access to any of your attributes/methods defined/inherited in
-   the receivingObj. Also, this flag is ignored for non function attributes, and when the exclude flag is set,
+   Just remember that the inherited method will not have access to any of your attributes/methods defined/inherited in
+   the defined type. Also, this flag is ignored for non function attributes, and when the exclude flag is set,
    since we can't bind an excluded method...
   - `['!', 'privateAttr']` Will exclude the selected attr, and include the rest
   - `['!']` Will exclude all attributes. Only useful for debugging purposes
