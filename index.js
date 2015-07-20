@@ -142,7 +142,7 @@
     },
 
     /** @private */
-    addMethod: function(definedObj, key, attr, mixin, type) {
+    addMethod: function(definedObj, key, attr, mixin) {
       var fn;
       fn = attr;
       fn = useParentContext.hasOwnProperty(key) ? fn.bind(mixin) : fn;

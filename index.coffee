@@ -113,7 +113,7 @@ defInc =
     return tempObj
 
   ###* @private ###
-  addMethod: (definedObj, key, attr, mixin, type)->
+  addMethod: (definedObj, key, attr, mixin)->
     fn = attr
     fn = if useParentContext.hasOwnProperty(key) then fn.bind(mixin) else fn
     if definedAttrs.hasOwnProperty(key)
