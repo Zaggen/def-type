@@ -45,20 +45,22 @@ enemyBoss = def.Object
     # some code
 
 ```
-**Mixin definition** This is exactly the same function as def.Object, it is just
-an alias to sort of create a convention of defining objects that their sole purpose
-is to be included and merge functionality from another obj/Class, pretty much like ruby modules or php traits.
-It is recommended, that you name you variables with the Traits suffix, and use object literals instead of 
-def.Mixin/Object, and just use it when the Object is actually mixing in more functionality into it, this way you get
-a little performance boost at definition, and we use the convention of calling Mixins, only the objects that mix in
-functionality and are supposed to be mixed/merged into other objects/classes/mixins.
+**Mixin definition** This is an alias of def.Object. It is recommended that you name your objects with 
+the Traits suffix when they are supposed to be merged into other objects/classes, and when your Traits Object
+needs to merge/mix in some functionality/properties from other objects/classes you use def.Mixin. This way
+we get a performance boost when defining simple traits (What pretty much the rest of the js world calls a mixin),
+and we only use this term to objects that are supposed to be merged/mixed in but they also merge/mix in other
+objects/mixins/classes.
+
 ```coffeescript
+# This is a traits Object
 encryptingTraits =
   encrypt: ->
     # some code
   decrypt: ->
     # some code
 
+# This is a Mixin Traits Object
 accountTraits = def.Mixin
   merge: encryptingTraits
   logIn: (req, res)->
