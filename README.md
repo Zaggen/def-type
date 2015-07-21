@@ -27,7 +27,7 @@ Character = def.Class
 Player = def.Class
   extends: Character # It will add the Character.prototype to the Player.prototype chain
   constructor: (@playerName)->
-    # some code
+    @_super.constructor.call(@) # Available when extending but not when merging.
   sayMsg: ->
     # some code
   kill: ->
@@ -47,16 +47,28 @@ enemyBoss = def.Object
 ```
 **Mixin definition** This is exactly the same function as def.Object, it is just
 an alias to sort of create a convention of defining objects that their sole purpose
-is to be included, pretty much like ruby modules or php traits.
+is to be included and merge functionality from another obj/Class, pretty much like ruby modules or php traits.
+It is recommended, that you name you variables with the Traits suffix, and use object literals instead of 
+def.Mixin/Object, and just use it when the Object is actually mixing in more functionality into it, this way you get
+a little performance boost at definition, and we use the convention of calling Mixins, only the objects that mix in
+functionality and are supposed to be mixed/merged into other objects/classes/mixins.
 ```coffeescript
+encryptingTraits =
+  encrypt: ->
+    # some code
+  decrypt: ->
+    # some code
+
 accountTraits = def.Mixin
+  merge: encryptingTraits
   logIn: (req, res)->
     # some code
   logOut: (req, res)->
     # some code
 
 ```
-**Module definition** This is another alias for def.Object, it is recommended for npm style modules. So you can define functionality packed in a module(which is a regular object) that needs to expose a small public API, and is not suppose to be inherited/mixed-in.You can define your own rules, but this is what i use it for.
+**Module definition** This is another alias for def.Object, it is recommended for npm style modules. So you can 
+define functionality packed in a module(which is a regular object) that needs to expose a small public API.
 ```coffeescript
 injector = def.Module ->
   @set = (fn)->
@@ -180,24 +192,26 @@ add or exclude from the mixin/class and/or a few optional flags (`!`, `*`,`~`).
 ```coffeescript
 def = require('def-inc')
 
-hardObjTraits = def.Mixin
+hardObjTraits =
   colliding: false
   isInCollision: ->
     # Detects if object is colliding with other hardObjs
 
-movableTraits = def.Mixin
+movableTraits =
   x: 0
   y: 0
   move: (x, y, time)->
     # Moves from current x,y to the new pos in the given time
     
-spriteTraits = def.Mixin
+spriteTraits =
   setBitmap: (bitmap)->
     # Sets sprite to the specified bitmap
   update: ->
     # Updates sprite
     
-gameCharacter = def.Object
+# A Mixin is an object that mixes/merges in functionality from other objects and is supposed
+# to be merged into another object or class and not to be used directly.
+gameCharacterTraits = def.Mixin
   merges: [movableTraits, spriteTraits, hardObjTraits]
   _exp: 0
   lvlUp: (newExp)->
@@ -206,15 +220,23 @@ gameCharacter = def.Object
     
   _increaseExp: (newExp)-> @_exp += newExp
 
-    
-gameCharacter.move(100, 200, 100) # Moves the character to position (100,200) in 100 milliseconds
+hero = def.Object
+  merges: [gameCharacterTraits]
+  name: 'Zaggen'
+  stats: 
+    agi: 23
+    def: 45
+    str: 99
+  
+hero.move(100, 200, 100) # Moves the hero to position (100,200) in 100 milliseconds
 
-killableTraits = def.Mixin
+killableTraits =
+  _hp: 100
   kill: ()-> 
     #Set hp to 0, and show dead animation
 
 Player = def.Class
-  merges: [ gameCharacter, ['~lvlUp'], killableTraits, ['kill'] ]
+  merges: [ gameCharacterTraits, ['~lvlUp'], killableTraits, ['kill'] ]
   constructor: (playerName)->
     @msg = "#{playerName} is ready to kill some goblins!"
   sayMsg: ->
@@ -277,4 +299,5 @@ Also, i think that to have protected (not shared) instance variables on a subcla
 passed to the child won't be the same one passed to the parent.
 
 ## Bugs, questions, ideas?
-Hell, yeah, just open an issue and i'll try to answer ASAP. I'll appreciate any bug report with a propper way to reproduce it.
+Hell, yeah, just open an issue and i'll try to answer ASAP. I'll appreciate any bug report with a proper way to
+reproduce it.
