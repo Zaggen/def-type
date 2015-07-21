@@ -103,6 +103,23 @@ zaggen = new Admin('zaggen')
 Please note that 'merges' copies the attributes or references to the defined item, so any change in the parents won't
 be reflected in the defined item.
 
+```
+**Abstract definition** Sometimes you want to define an npm like module or a Class that is not supposed to be
+used directly, but to be extended and it doesn't makes much sense as a Traits obj. You can define that kind of
+object or class with def.Abstract. When you set a constructor it internally calls def.Class, and when you don't
+it used def.Object, there is no special safety mechanism for preventing direct instantiation or usage, is up to
+you as a programmer to follow this convention.
+```coffeescript
+FrontEndController = def.Abstract
+  constructor: ->
+    # some code
+  _beforeFilter: ->
+    # some code
+  _afterFilter: ->
+    # some code
+
+```
+
 #### Usage with real private methods and attrs(shared)
 You can get true privacy when passing a lambda instead of an object, in this anonymous fn you will define your public
 attrs as instance members of that fn, and your private attributes as local variables, the nice thing here is a that all
@@ -220,6 +237,7 @@ gameCharacterTraits = def.Mixin
     
   _increaseExp: (newExp)-> @_exp += newExp
 
+# A defined Object is supposed to be used as it is, like a customized instance of Object.
 hero = def.Object
   merges: [gameCharacterTraits]
   name: 'Zaggen'
