@@ -19,11 +19,17 @@ conf =
     enabled: true
 
 defInc =
-  defObject: (obj)->
-    defInc.define(obj, 'object')
+  defObject: (propsDefiner)->
+    defInc.define(propsDefiner, 'object')
 
-  defClass: (obj)->
-    defInc.define(obj, 'class')
+  defClass: (propsDefiner)->
+    defInc.define(propsDefiner, 'class')
+
+  defAbstract: (propsDefiner)->
+    if propsDefiner.hasOwnProperty('constructor')
+      defInc.define(propsDefiner, 'class')
+    else
+      defInc.define(propsDefiner, 'object')
 
   ###*
   * Defines a new Object or a Class that can inherit properties from other objects/classes in
@@ -81,25 +87,14 @@ defInc =
     definedObj = @clearConfigKeys(definedObj)
     definedAttrs = _.mapValues(definedObj, (val)-> true) # Creates an obj, with the newObj keys, and a boolean
     staticMethods = {}
-    definedObj._super = {}
 
     # If the defined object/class extends another object/class
     if parent?
-      if type is 'class'
-        parentPrototype = prototype
-        if _.isFunction(parent)
-          definedObj._super = prototype.constructor
-
-          # If __proto__ is available, we attach the parent.prototype to the _super fn
-          if Object.__proto__?
-            definedObj._super.__proto__ = prototype
-          else
-            for propName, prop of prototype
-              if _.isFunction(prop)
-                definedObj._super[propName] = prop
-      else
-        attachedProto = Object.create(prototype)
-        definedObj = _.merge(attachedProto, definedObj)
+      objWithProto = Object.create(prototype)
+      definedObj = _.merge(objWithProto, definedObj)
+      definedObj._super = {constructor: prototype.constructor }
+    else
+      definedObj._super = {}
 
     return definedObj
 
@@ -328,6 +323,7 @@ defInc =
 
 module.exports =
   Class: defInc.defClass
+  Abstract: defInc.defAbstract
   Object: defInc.defObject
   # Alias for Object definition, just syntactic sugar
   Module: defInc.defObject

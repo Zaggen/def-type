@@ -33,11 +33,18 @@
   };
 
   defInc = {
-    defObject: function(obj) {
-      return defInc.define(obj, 'object');
+    defObject: function(propsDefiner) {
+      return defInc.define(propsDefiner, 'object');
     },
-    defClass: function(obj) {
-      return defInc.define(obj, 'class');
+    defClass: function(propsDefiner) {
+      return defInc.define(propsDefiner, 'class');
+    },
+    defAbstract: function(propsDefiner) {
+      if (propsDefiner.hasOwnProperty('constructor')) {
+        return defInc.define(propsDefiner, 'class');
+      } else {
+        return defInc.define(propsDefiner, 'object');
+      }
     },
 
     /**
@@ -80,7 +87,7 @@
 
     /** @private */
     setObj: function(propsDefiner, type) {
-      var accessors, attachedProto, definedObj, includedTypes, parent, prop, propName, prototype;
+      var accessors, definedObj, includedTypes, objWithProto, parent, prototype;
       definedObj = {};
       if (_.isFunction(propsDefiner)) {
         propsDefiner.call(definedObj);
@@ -102,27 +109,14 @@
         return true;
       });
       staticMethods = {};
-      definedObj._super = {};
       if (parent != null) {
-        if (type === 'class') {
-          parentPrototype = prototype;
-          if (_.isFunction(parent)) {
-            definedObj._super = prototype.constructor;
-            if (Object.__proto__ != null) {
-              definedObj._super.__proto__ = prototype;
-            } else {
-              for (propName in prototype) {
-                prop = prototype[propName];
-                if (_.isFunction(prop)) {
-                  definedObj._super[propName] = prop;
-                }
-              }
-            }
-          }
-        } else {
-          attachedProto = Object.create(prototype);
-          definedObj = _.merge(attachedProto, definedObj);
-        }
+        objWithProto = Object.create(prototype);
+        definedObj = _.merge(objWithProto, definedObj);
+        definedObj._super = {
+          constructor: prototype.constructor
+        };
+      } else {
+        definedObj._super = {};
       }
       return definedObj;
     },
@@ -422,6 +416,7 @@
 
   module.exports = {
     Class: defInc.defClass,
+    Abstract: defInc.defAbstract,
     Object: defInc.defObject,
     Module: defInc.defObject,
     Mixin: defInc.defObject,
