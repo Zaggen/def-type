@@ -90,6 +90,7 @@ describe 'def-inc Module', ->
               name: 'Jake'
               write: ->
 
+            expect(writer.getName).to.exist
             expect(writer.getName()).to.equal('Jake')
             expect(writer.write).to.exist
 
@@ -369,19 +370,47 @@ describe 'def-inc Module', ->
           Admin = def.Class
             extends: User
             constructor: (name, @clearanceLvl)->
-              @_super(name)
+              @_super.constructor.call(@, name)
             someMethod: ->
-              @_super.getName.call(@)
+              @getName()
 
           it 'should have all properties from the passed Class', ->
             expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName')
 
           it 'should have access to the parent Class constructor via the @_super fn', ->
             adminUser = new Admin('zaggen', 5)
-            expect(adminUser._super).to.be.a('function')
+            expect(adminUser._super).to.be.an('object')
             expect(adminUser.userName).to.equal('zaggen')
             expect(adminUser.someMethod()).to.equal('zaggen')
 
           it 'should have access to the parent Class methods via the @_super obj', ->
             adminUser = new Admin('zaggen', 5)
             expect(adminUser.someMethod()).to.equal('zaggen')
+
+    describe 'def.Abstract method', ->
+      it 'should define an object, just as def.object method when no constructor is defined', ->
+        abstractObj = def.Abstract
+          someMethod: -> true
+        expect(abstractObj).to.be.an('object')
+        expect(abstractObj.someMethod).to.exist
+
+      it 'should define a Class when the constructor is defined', ->
+        abstractClass = def.Abstract
+          constructor: -> @_x = 5
+          someMethod: -> true
+
+        expect(abstractClass).to.be.a('function')
+
+      it 'should define a Class that can be used to extend classes and objects', ->
+
+        AbstractClass = def.Abstract
+          constructor: -> @_x = 5
+          someMethod: -> true
+
+        concreteClass = def.Class
+          extends: AbstractClass
+          constructor: ->
+            @_x = @_super.constructor.call()
+
+        instance = new concreteClass
+        expect(instance._x).to.exist

@@ -114,6 +114,7 @@
                 name: 'Jake',
                 write: function() {}
               });
+              expect(writer.getName).to.exist;
               expect(writer.getName()).to.equal('Jake');
               return expect(writer.write).to.exist;
             });
@@ -459,7 +460,7 @@
           });
         });
       });
-      return describe('def.Class method', function() {
+      describe('def.Class method', function() {
         it('should define a js "Class" when a constructor method is defined', function() {
           var definedClass;
           definedClass = def.Class({
@@ -543,10 +544,10 @@
               "extends": User,
               constructor: function(name, clearanceLvl) {
                 this.clearanceLvl = clearanceLvl;
-                return this._super(name);
+                return this._super.constructor.call(this, name);
               },
               someMethod: function() {
-                return this._super.getName.call(this);
+                return this.getName();
               }
             });
             it('should have all properties from the passed Class', function() {
@@ -555,7 +556,7 @@
             it('should have access to the parent Class constructor via the @_super fn', function() {
               var adminUser;
               adminUser = new Admin('zaggen', 5);
-              expect(adminUser._super).to.be.a('function');
+              expect(adminUser._super).to.be.an('object');
               expect(adminUser.userName).to.equal('zaggen');
               return expect(adminUser.someMethod()).to.equal('zaggen');
             });
@@ -565,6 +566,49 @@
               return expect(adminUser.someMethod()).to.equal('zaggen');
             });
           });
+        });
+      });
+      return describe('def.Abstract method', function() {
+        it('should define an object, just as def.object method when no constructor is defined', function() {
+          var abstractObj;
+          abstractObj = def.Abstract({
+            someMethod: function() {
+              return true;
+            }
+          });
+          expect(abstractObj).to.be.an('object');
+          return expect(abstractObj.someMethod).to.exist;
+        });
+        it('should define a Class when the constructor is defined', function() {
+          var abstractClass;
+          abstractClass = def.Abstract({
+            constructor: function() {
+              return this._x = 5;
+            },
+            someMethod: function() {
+              return true;
+            }
+          });
+          return expect(abstractClass).to.be.a('function');
+        });
+        return it('should define a Class that can be used to extend classes and objects', function() {
+          var AbstractClass, concreteClass, instance;
+          AbstractClass = def.Abstract({
+            constructor: function() {
+              return this._x = 5;
+            },
+            someMethod: function() {
+              return true;
+            }
+          });
+          concreteClass = def.Class({
+            "extends": AbstractClass,
+            constructor: function() {
+              return this._x = this._super.constructor.call();
+            }
+          });
+          instance = new concreteClass;
+          return expect(instance._x).to.exist;
         });
       });
     });
