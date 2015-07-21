@@ -105,7 +105,6 @@ zaggen = new Admin('zaggen')
 Please note that 'merges' copies the attributes or references to the defined item, so any change in the parents won't
 be reflected in the defined item.
 
-```
 **Abstract definition** Sometimes you want to define an npm like module or a Class that is not supposed to be
 used directly, but to be extended and it doesn't makes much sense as a Traits obj. You can define that kind of
 object or class with def.Abstract. When you set a constructor it internally calls def.Class, and when you don't
@@ -120,6 +119,12 @@ FrontEndController = def.Abstract
   _afterFilter: ->
     # some code
 
+# Here user controller is a FrontEndController and has accountTraits
+UserControler = def.Class
+  extends: FrontEndController
+  merges: [accountTraits]
+  constructor: ->
+    @_super.call(@)
 ```
 
 #### Usage with real private methods and attrs(shared)
