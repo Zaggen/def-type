@@ -401,17 +401,50 @@
                 return expect(definedObj2.multiply(5, 5)).to.equal(25);
               });
             });
-            describe('When overriding a function in the defined object', function() {
-              return it('should be able to call the parent obj method via the _super obj', function() {
-                var definedObj;
-                definedObj = def.Object({
-                  merges: [mixin1],
-                  multiply: function() {
-                    var numbers;
-                    numbers = 1 <= arguments.length ? slice.call(arguments, 0) : [];
-                    return this._super.multiply.apply(this, numbers) * 2;
-                  }
+            describe('When overriding a method in the defined object', function() {
+              var definedObj;
+              definedObj = def.Object({
+                merges: [mixin1],
+                multiply: function() {
+                  var numbers;
+                  numbers = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+                  return this._super.multiply.apply(this, numbers) * 2;
+                }
+              });
+              describe('The _super object', function() {
+                describe('When the defined object merges in an object literal (vanilla js)', function() {
+                  return it('should have all methods from the parent, overridden or not', function() {
+                    return expect(Object.keys(definedObj._super)).to.eql(['sum', 'multiply']);
+                  });
                 });
+                return describe('When the defined object merges in an object defined via def-inc module', function() {
+                  var definedMixin, definedObj2;
+                  definedMixin = def.Object({
+                    sum: function() {
+                      var i, len, n, numbers, r;
+                      numbers = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+                      r = 0;
+                      for (i = 0, len = numbers.length; i < len; i++) {
+                        n = numbers[i];
+                        r += n;
+                      }
+                      return r;
+                    }
+                  });
+                  definedObj2 = def.Object({
+                    merges: [definedMixin],
+                    multiply: function() {
+                      var numbers;
+                      numbers = 1 <= arguments.length ? slice.call(arguments, 0) : [];
+                      return this._super.multiply.apply(this, numbers) * 2;
+                    }
+                  });
+                  return it('should have all methods from the parent, overridden or not', function() {
+                    return expect(Object.keys(definedObj2._super)).to.eql(['sum']);
+                  });
+                });
+              });
+              return it('should be able to call the parent obj method via the _super obj', function() {
                 return expect(definedObj.multiply(2, 2)).to.equal(8);
               });
             });

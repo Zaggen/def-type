@@ -278,13 +278,34 @@ describe 'def-inc Module', ->
               definedObj2 = def.Object( merges: [ definedObj, mixin1 ])
               expect(definedObj2.multiply(5, 5)).to.equal(25)
 
-          describe 'When overriding a function in the defined object', ->
-            it 'should be able to call the parent obj method via the _super obj', ->
-              definedObj = def.Object
-                merges: [ mixin1 ]
-                multiply: (numbers...)->
-                  @_super.multiply.apply(this, numbers) * 2
+          describe 'When overriding a method in the defined object', ->
 
+            definedObj = def.Object
+              merges: [ mixin1 ]
+              multiply: (numbers...)->
+                @_super.multiply.apply(this, numbers) * 2
+
+            describe 'The _super object', ->
+              describe 'When the defined object merges in an object literal (vanilla js)', ->
+                it 'should have all methods from the parent, overridden or not', ->
+                  expect(Object.keys(definedObj._super)).to.eql(['sum', 'multiply'])
+
+              describe 'When the defined object merges in an object defined via def-inc module', ->
+                definedMixin = def.Object
+                  sum: (numbers...)->
+                    r = 0
+                    r += n for n in numbers
+                    return r
+
+                definedObj2 = def.Object
+                  merges: [ definedMixin ]
+                  multiply: (numbers...)->
+                    @_super.multiply.apply(this, numbers) * 2
+
+                it 'should have all methods from the parent, overridden or not', ->
+                  expect(Object.keys(definedObj2._super)).to.eql(['sum'])
+
+            it 'should be able to call the parent obj method via the _super obj', ->
               expect(definedObj.multiply(2, 2)).to.equal(8)
 
           describe 'When a property is defined with a leading underscore in the passed argument object/fn', ->
