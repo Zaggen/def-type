@@ -71,7 +71,9 @@
             if (_.isFunction(property)) {
               this.addMethod(definedObj, propertyName, property, mixin, type);
             } else {
-              this.addAttribute(definedObj, propertyName, property);
+              if (propertyName !== '_super') {
+                this.addAttribute(definedObj, propertyName, property);
+              }
             }
           }
         }
@@ -155,7 +157,7 @@
         return definedObj[key] = _.cloneDeep(attr);
       } else if (_.isArray(attr)) {
         return definedObj[key] = definedObj[key].concat(attr);
-      } else if (_.isObject(attr) && key !== '_super') {
+      } else if (_.isObject(attr)) {
         return definedObj[key] = _.merge(definedObj[key], attr);
       }
     },

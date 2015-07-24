@@ -52,7 +52,7 @@ defInc =
           if _.isFunction(property)
             @addMethod(definedObj, propertyName, property, mixin, type)
           else
-            @addAttribute(definedObj, propertyName, property)
+            @addAttribute(definedObj, propertyName, property) if propertyName isnt '_super'
 
       # Once we are done with all attributes, we check for any static property
       # to add to our static properties object
@@ -111,20 +111,25 @@ defInc =
   addMethod: (definedObj, key, attr, mixin)->
     fn = attr
     fn = if useParentContext.hasOwnProperty(key) then fn.bind(mixin) else fn
+
     if definedAttrs.hasOwnProperty(key)
       definedObj._super[key] = fn unless key is 'constructor'
     else
+      # If method is not found at the defined object, we
+      # still store that method in the _super obj to allow
+      # access to it, in case the method is overridden in the
+      # defined obj at a later time in runtime.
       definedObj[key] = definedObj._super[key] = fn
 
   ###* @private ###
   addAttribute: (definedObj, key, attr)->
-  # We check if the receiving object already has an attribute with that keyName
-  # if none is found or the attr is an array/obj we concat/merge it
+    # We check if the receiving object already has an attribute with that keyName
+    # if none is found or the attr is an array/obj we concat/merge it
     if not definedAttrs.hasOwnProperty(key)
       definedObj[key] = _.cloneDeep(attr)
     else if _.isArray(attr)
       definedObj[key] = definedObj[key].concat(attr)
-    else if _.isObject(attr) and key isnt '_super'
+    else if _.isObject(attr)
       definedObj[key] = _.merge(definedObj[key], attr)
 
   ###*
