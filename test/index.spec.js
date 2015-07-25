@@ -62,7 +62,7 @@
         return it('should return the nonEnum settings', function() {
           return expect(def.getNonEnum()).to.eql({
             leadingChar: '_',
-            enabled: true
+            enabled: false
           });
         });
       });
@@ -473,7 +473,7 @@
                     return x * x;
                   }
                 });
-                expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare']);
+                expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare', '_super']);
                 return def.setNonEnum('_', true);
               });
               return it('should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off locally', function() {
@@ -487,7 +487,7 @@
                     return x * x;
                   }
                 });
-                return expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare']);
+                return expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare', '_super']);
               });
             });
           });
@@ -584,7 +584,7 @@
               }
             });
             it('should have all properties from the passed Class', function() {
-              return expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName');
+              return expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName', '_super');
             });
             it('should have access to the parent Class constructor via the @_super fn', function() {
               var adminUser;

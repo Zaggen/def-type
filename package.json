@@ -1,6 +1,6 @@
 {
   "name": "def-inc",
-  "version": "0.4.10",
+  "version": "0.5.0",
   "description": "A nice object and classes definition module that allows multiple composable inheritance.",
   "main": "index.js",
   "scripts": {

@@ -53,7 +53,7 @@ describe 'def-inc Module', ->
 
     describe 'getEnum method', ->
       it 'should return the nonEnum settings', ->
-        expect(def.getNonEnum()).to.eql({leadingChar: '_', enabled: true})
+        expect(def.getNonEnum()).to.eql({leadingChar: '_', enabled: false})
 
     describe 'setEnum method', ->
       describe 'when the only the first argument is passed', ->
@@ -323,7 +323,7 @@ describe 'def-inc Module', ->
                 calculation: (x)-> @_pseudoPrivateSquare(x)
                 _pseudoPrivateSquare: (x)-> x * x
 
-              expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare'])
+              expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare', '_super'])
               def.setNonEnum('_', true)
 
             it 'should not have that property marked as nonEnumerable if the "nonEnumOnPrivate" setting is turned off locally', ->
@@ -332,7 +332,7 @@ describe 'def-inc Module', ->
                 calculation: (x)-> @_pseudoPrivateSquare(x)
                 _pseudoPrivateSquare: (x)-> x * x
 
-              expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare'])
+              expect(Object.keys(definedObj)).to.eql(['calculation', '_pseudoPrivateSquare', '_super'])
 
     describe 'def.Class method', ->
 
@@ -396,7 +396,7 @@ describe 'def-inc Module', ->
               @getName()
 
           it 'should have all properties from the passed Class', ->
-            expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName')
+            expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName', '_super')
 
           it 'should have access to the parent Class constructor via the @_super fn', ->
             adminUser = new Admin('zaggen', 5)
