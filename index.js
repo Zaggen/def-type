@@ -28,7 +28,7 @@
   conf = {
     nonEnum: {
       leadingChar: '_',
-      enabled: true
+      enabled: false
     }
   };
 
@@ -81,7 +81,10 @@
           this.pushStaticMethods(mixin);
         }
       }
-      this.markPropertiesAsNonEnum(definedObj);
+      if (conf.nonEnum || currentNonEnumConf) {
+        this.markPropertiesAsNonEnum(definedObj);
+      }
+      this.freezeProp(definedObj, '_super');
       type = this.makeType(definedObj, type);
       this.clearData();
       return type;
@@ -338,10 +341,7 @@
             this.defNonEnumProp(definedObj, propertyName);
           }
         }
-      } else {
-        this.defNonEnumProp(definedObj, '_super');
       }
-      this.freezeProp(definedObj, '_super');
       return true;
     },
 

@@ -16,7 +16,7 @@ useParentContext = null # {}
 conf =
   nonEnum:
     leadingChar: '_'
-    enabled: true
+    enabled: false
 
 defInc =
   defObject: (propsDefiner)->
@@ -58,7 +58,8 @@ defInc =
       # to add to our static properties object
       if mixin.__static__? then @pushStaticMethods(mixin)
 
-    @markPropertiesAsNonEnum(definedObj)
+    @markPropertiesAsNonEnum(definedObj) if conf.nonEnum or currentNonEnumConf
+    @freezeProp(definedObj, '_super')
 
     # Returns a pseudo-class or the currently defined object
     type = @makeType(definedObj, type)
@@ -266,10 +267,7 @@ defInc =
       for propertyName in propertyNames
         if propertyName.charAt(0) is nonEnum.leadingChar
           @defNonEnumProp(definedObj, propertyName)
-    else
-      @defNonEnumProp(definedObj, '_super')
 
-    @freezeProp(definedObj, '_super')
     return true
 
   ###* @private ###
