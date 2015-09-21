@@ -33,6 +33,8 @@ mocks =
     enable: true
     preferences:
       fullScreen: true
+      muted: false
+    favoriteChannels: [12,51]
 
   mixin6:
     increaseByOne: (n)->  @sum(n, 1)
