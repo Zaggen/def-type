@@ -126,12 +126,14 @@ defInc =
   addAttribute: (definedObj, key, value)->
     # We check if the receiving object already has an attribute with that keyName
     # if none is found or the attr is an array/obj we concat/merge it
-    if not definedAttrs.hasOwnProperty(key)
+    if definedAttrs.hasOwnProperty(key)
+      if _.isObject(value) and not _.isArray(value)
+        definedObj[key] = _.merge({}, value, definedObj[key])
+        return true
+    else
       definedObj[key] = _.cloneDeep(value)
-    else if _.isArray(value)
-      definedObj[key] = definedObj[key].concat(value)
-    else if _.isObject(value)
-      definedObj[key] = _.merge({}, value, definedObj[key])
+      return true
+    return false
 
   ###*
   * Checks if the object that is supposed to be a class has a constructor, and
