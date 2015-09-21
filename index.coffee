@@ -42,7 +42,7 @@ defInc =
     definedObj = @setObj(propsDefiner, type)
     for mixin, i in mixins
       filter.set(options[i])
-      # Checks each propertie and compares it against the defined (or default) filters
+      # Checks each property and compares it against the defined (or default) filters
       # and when they are not skipped by the filter it adds them to the defined object
 
       propertyNames = Object.getOwnPropertyNames(mixin)
@@ -123,15 +123,15 @@ defInc =
       definedObj[key] = definedObj._super[key] = fn
 
   ###* @private ###
-  addAttribute: (definedObj, key, attr)->
+  addAttribute: (definedObj, key, value)->
     # We check if the receiving object already has an attribute with that keyName
     # if none is found or the attr is an array/obj we concat/merge it
     if not definedAttrs.hasOwnProperty(key)
-      definedObj[key] = _.cloneDeep(attr)
-    else if _.isArray(attr)
-      definedObj[key] = definedObj[key].concat(attr)
-    else if _.isObject(attr)
-      definedObj[key] = _.merge(definedObj[key], attr)
+      definedObj[key] = _.cloneDeep(value)
+    else if _.isArray(value)
+      definedObj[key] = definedObj[key].concat(value)
+    else if _.isObject(value)
+      definedObj[key] = _.merge({}, value, definedObj[key])
 
   ###*
   * Checks if the object that is supposed to be a class has a constructor, and
