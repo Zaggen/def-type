@@ -62,8 +62,10 @@
     mixin5: {
       enable: true,
       preferences: {
-        fullScreen: true
-      }
+        fullScreen: true,
+        muted: false
+      },
+      favoriteChannels: [12, 51]
     },
     mixin6: {
       increaseByOne: function(n) {

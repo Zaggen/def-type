@@ -155,14 +155,17 @@
     },
 
     /** @private */
-    addAttribute: function(definedObj, key, attr) {
-      if (!definedAttrs.hasOwnProperty(key)) {
-        return definedObj[key] = _.cloneDeep(attr);
-      } else if (_.isArray(attr)) {
-        return definedObj[key] = definedObj[key].concat(attr);
-      } else if (_.isObject(attr)) {
-        return definedObj[key] = _.merge(definedObj[key], attr);
+    addAttribute: function(definedObj, key, value) {
+      if (definedAttrs.hasOwnProperty(key)) {
+        if (_.isObject(value) && !_.isArray(value)) {
+          definedObj[key] = _.merge({}, value, definedObj[key]);
+          return true;
+        }
+      } else {
+        definedObj[key] = _.cloneDeep(value);
+        return true;
       }
+      return false;
     },
 
     /**
