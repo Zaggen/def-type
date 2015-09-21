@@ -51,11 +51,13 @@ describe 'def.Object method', ->
             preferences:
               autoPlay: true
               muted: true
+            favoriteChannels: [31, 23]
 
           expect(definedObj.enable).to.be.false
           expect(definedObj.preferences.fullScreen).to.be.true
           expect(definedObj.preferences.autoPlay).to.be.true
           expect(definedObj.preferences.muted).to.be.true
+          expect(definedObj.favoriteChannels).to.eql([31, 23])
 
       it 'should only include the specified attributes from the merged obj/class, when an attr list [] is provided', ->
         definedObj = def.Object(merges: [mixin1, ['sum'], mixin4, ['publicMethod'], mixin6])
