@@ -1,20 +1,20 @@
-# Def-Inc
-![travis.ci](https://travis-ci.org/Zaggen/def-inc.svg?branch=master "Build Status")
+# def-type
+![travis.ci](https://travis-ci.org/Zaggen/def-type.svg?branch=master "Build Status")
 
 **This module is in active development, and still in beta, do not use in production.... yet**
 
 ## A Multiple composable inheritance module for js
-def-inc is an npm module that allows you to easily define Objects and classes that can inherit from a single parent 
+def-type is an npm module that allows you to easily define Objects and classes that can inherit from a single parent
 object by adding it to the prototype chain of the defined Object/Class (via the 'extends' directive) or from multiple 
 objects or "classes" (via 'merges' directive), which also lets you to choose which attributes you merge(copy).
 It also allows you to work with true shared privacy with almost the same syntax.
  
 ## Installation
-`npm install def-inc --save`
+`npm install def-type --save`
 
 ## Usage
 ```coffeescript
-def = require('def-inc')
+def = require('def-type')
 ```
 **Class definition** (All attributes not defined in the constructor will live in the prototype obj)
 ```coffeescript
@@ -134,7 +134,7 @@ your public functions will have access to the private stuff (This is a closure t
 can define your private variables at the bottom like in ruby, which is hard to do in cs because we only have fn 
 expressions so we don't get hoisted fns... anyways, you can use private properties too (data) but this data will be 
 shared across all instances of the class, so be aware of that, its usefull for objects, but not that much for classes.
-You can use weakMaps to accomplish this but that is not something def-inc will do for you, additionally bare in mind that
+You can use weakMaps to accomplish this but that is not something def-type will do for you, additionally bare in mind that
 if you add public functions later, this fns can't access the previously defined private properties, because they will be
 out of scope, so monkey patching is not possible, also you can't inherit private members. Is probably better to use
 the underscore convention for private attrs in most cases, but sometimes you really want this behavior, so here it is.
@@ -214,7 +214,7 @@ add or exclude from the mixin/class and/or a few optional flags (`!`, `*`,`~`).
 
 ## Examples
 ```coffeescript
-def = require('def-inc')
+def = require('def-type')
 
 hardObjTraits =
   colliding: false
