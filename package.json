@@ -1,6 +1,6 @@
 {
-  "name": "def-inc",
-  "version": "0.5.2",
+  "name": "def-type",
+  "version": "0.5.4",
   "description": "A nice object and classes definition module that allows multiple composable inheritance.",
   "main": "index.js",
   "scripts": {
@@ -24,14 +24,15 @@
     "composition",
     "composable",
     "private methods",
-    "define"
+    "define",
+    "def-inc"
   ],
   "author": "Zaggen/Lu Roman <xpynesoul@gmail.com> (https://github.com/Zaggen)",
   "license": "ISC",
   "bugs": {
-    "url": "https://github.com/Zaggen/def-inc/issues"
+    "url": "https://github.com/Zaggen/def-type/issues"
   },
-  "homepage": "https://github.com/Zaggen/def-inc",
+  "homepage": "https://github.com/Zaggen/def-type",
   "dependencies": {
     "lodash": "^3.8.0"
   },
