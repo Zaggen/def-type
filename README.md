@@ -27,7 +27,7 @@ Character = def.Class
 Player = def.Class
   extends: Character # It will add the Character.prototype to the Player.prototype chain
   constructor: (@playerName)->
-    @_super.constructor.call(@) # Available when extending but not when merging.
+    Player._super.constructor.call(@) # Available when extending but not when merging.
   sayMsg: ->
     # some code
   kill: ->
@@ -120,14 +120,14 @@ FrontEndController = def.Abstract
     # some code
 
 # Here user controller is a FrontEndController and has accountTraits
-UserControler = def.Class
+UserController = def.Class
   extends: FrontEndController
   merges: [accountTraits]
   constructor: ->
-    @_super.call(@)
+    UserController._super.call(@)
 ```
 
-#### Usage with real private methods and attrs(shared)
+#### Usage with real private methods and attrs(static/shared)
 You can get true privacy when passing a lambda instead of an object, in this anonymous fn you will define your public
 attrs as instance members of that fn, and your private attributes as local variables, the nice thing here is a that all
 your public functions will have access to the private stuff (This is a closure that is executed internally) and you
@@ -141,7 +141,7 @@ the underscore convention for private attrs in most cases, but sometimes you rea
 ```coffeescript
 Admin = def.Class ->
   # private properties have to be defined at the top in cs
-  instanceNumber = 0
+  instanceNumber = 0 # Static variable, will be shared accross all instances
   # Public
   @constructor = (@name)->
     instanceNumber++
@@ -186,7 +186,8 @@ console.log user.fullName # Logs 'Max Payne'
  their original objects.
 * A `_super` object is created when the defined type is being extended or merged, it will contain all of the inherited
 (extended and merged) methods into it. This is useful when you want to override an inherited parent method but you still
-want to have access to the original functionality. Methods that makes changes to instance members should be called 
+want to have access to the original functionality. To avoid getting the wrong super, you must reference the defined
+object or class instead of using `this`. Methods that makes changes to instance members should be called 
 using `.call(this, arg1, arg2)` or `.apply(this,[args])`
 * You can define 'classes' very easy, and extend them with out ,manually adding the parent class prototype to the 
 currently defined class and setting back the original constructor, or adding methods to the prototype one by one.
@@ -200,13 +201,8 @@ You can specify which properties you merge into the defined obj/class, by combin
 add or exclude from the mixin/class and/or a few optional flags (`!`, `*`,`~`).
 * This are the options in details
   - `['attr1', 'attr2']` Will only include those selected attributes from the corresponding object
-  - `['~publicMethod']` Delegate; Will only include those selected method and it will bind its context to the original
-   object/Class. This is useful, when you have an object with "public" methods that make use of internal "private" methods,
-   and you don't want to inherit those, this way this inherited method will be able to call all the needed attributes
-   and methods from its original obj. Use this sparingly since it will bite you if you try to use it incorrectly.
-   Just remember that the inherited method will not have access to any of your attributes/methods defined/inherited in
-   the defined type. Also, this flag is ignored for non function attributes, and when the exclude flag is set,
-   since we can't bind an excluded method...
+  - `['~publicMethod']`  ***This functionality will be deprecated in the next update*** Delegate; Will only include those selected method and it will bind its context to the original
+   object/Class. 
   - `['!', 'privateAttr']` Will exclude the selected attr, and include the rest
   - `['!']` Will exclude all attributes. Only useful for debugging purposes
   - `['*']` Will include all attributes. By default if you don't provide a confArray there is no need to explicitly say
@@ -267,7 +263,7 @@ Player = def.Class
   sayMsg: ->
     console.log @msg
   kill: ->
-    @_super.kill.call(@) # Unless kill is a pure fn with no side effects, it should be called using call or apply
+    Player._super.kill.call(@) # Unless kill is a pure fn with no side effects, it should be called using call or apply
     console.log 'Game Over'
   
 zaggen = new Player('Zaggen')
@@ -275,53 +271,6 @@ zaggen.sayMsg() # Outputs "Zaggen is ready to kill some goblins!"
 zaggen.lvlUp(100) #Increases exp, and if enough it'll lvl up the player
 zaggen.move(15, 40, 10) # Moves the character to position (15,40) in 10 milliseconds
 ```
-
-
-### Comming features?
-* I've been thinking in how to implement real protected(shared) methods and private instance variables
-with a nice syntax and so far i have two ideas, one involves using eval, and it'll be a little slower at definition time
-since it has to eval every method once is defined, and using this method is not possible to have instance variables with
-the same syntax. The syntax is pretty much what is on an example up there, where public methods use @ and private methods
-don't.
-
-* The other option which is more realistic and doable, and maybe performs better is something like this:
-```coffeescript
-
-Player = def.Class (pv)->
-    @include = [ AccountTraits, ['logIn'] ]
-    @constructor = (playerName)->
-      pv(@).playerName = "#{playerName}-Sama"
-      pv.each()
-
-    @sayMsg = (msg)->
-      console.log msg
-
-    @kill = ->
-      pv.calculateHp(0)
-      @sayMsg "You are dead"
-
-    pv.calculateHp = (hp)->
-      return hp
-
-    pv.beforeCreate = (values, next)->
-      values.slug = Tools.slugify(values.name)
-      next()
-
-```
-
-All pv methods are protected, meaning they can be inherited, and instance variables `pv(@)` won't be shared across
-instances, this needs weakmaps to avoid memory leaks, but if not present, it will use objects and ids internally and
-you will have to make sure to call the pv(@).__destroy__() method before removing the object.
-With this syntax we get what other languages have, you can call public methods inside private ones, since they will be
-internally bind to the public object, i won't make the public object as prototype to accomplish this since that will mess
-up with the calling of @ inside those methods.
-I'll try to work on this as soon as i have time, i think i like it better than most modules out there trying to do something
-similar, the only thing i'm not sure yet is, "is it worth it"?
-
-EDIT: Now i realize, that using this syntax, if i set the context of the pv fns to the currently defined class i'll lose
-access to the other private methods, but if i don't i have to manually pass the context to each private fn.
-Also, i think that to have protected (not shared) instance variables on a subclass i have to use eval, since the pv var
-passed to the child won't be the same one passed to the parent.
 
 ## Bugs, questions, ideas?
 Hell, yeah, just open an issue and i'll try to answer ASAP. I'll appreciate any bug report with a proper way to
