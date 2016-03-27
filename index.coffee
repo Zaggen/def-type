@@ -104,7 +104,7 @@ defInc =
     tempObj = {}
     reservedKeys = ['merges', 'extends', 'accessors', 'nonEnum']
     for key, attr of definedObj
-      unless _.contains(reservedKeys, key)
+      unless _.includes(reservedKeys, key)
         tempObj[key] = attr
     return tempObj
 
