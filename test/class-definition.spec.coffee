@@ -56,21 +56,24 @@ describe 'def.Class method', ->
         extends: User
         constructor: (name, @clearanceLvl)->
           @_super.constructor.call(@, name)
+
         someMethod: ->
           @getName()
+
+      userName = 'zaggen'
 
       it 'should have all properties from the passed Class', ->
         expect(Admin.prototype.__proto__).to.have.all.keys('constructor', 'getName', '_super')
 
       it 'should have access to the parent Class constructor via the @_super fn', ->
-        adminUser = new Admin('zaggen', 5)
+        adminUser = new Admin(userName, 5)
         expect(adminUser._super).to.be.an('object')
-        expect(adminUser.userName).to.equal('zaggen')
-        expect(adminUser.someMethod()).to.equal('zaggen')
+        expect(adminUser.userName).to.equal(userName)
+        expect(adminUser.someMethod()).to.equal(userName)
 
       it 'should have access to the parent Class methods via the @_super obj', ->
-        adminUser = new Admin('zaggen', 5)
-        expect(adminUser.someMethod()).to.equal('zaggen')
+        adminUser = new Admin(userName, 5)
+        expect(adminUser.someMethod()).to.equal(userName)
 
   describe 'def.Abstract method', ->
     it 'should define an object, just as def.object method when no constructor is defined', ->
@@ -95,7 +98,7 @@ describe 'def.Class method', ->
       concreteClass = def.Class
         extends: AbstractClass
         constructor: ->
-          @_x = @_super.constructor.call()
+          @_x = @_super.constructor()
 
       instance = new concreteClass
       expect(instance._x).to.exist
