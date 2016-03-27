@@ -1,6 +1,6 @@
 {
   "name": "def-type",
-  "version": "0.5.4",
+  "version": "0.5.5",
   "description": "A nice object and classes definition module that allows multiple composable inheritance.",
   "main": "index.js",
   "scripts": {
@@ -34,11 +34,12 @@
   },
   "homepage": "https://github.com/Zaggen/def-type",
   "dependencies": {
-    "lodash": "^3.8.0"
+    "lodash": "^4.6.1"
   },
   "devDependencies": {
     "chai": "^2.3.0",
     "coffee-script": "^1.9.3",
+    "colors": "^1.1.2",
     "mocha": "^2.2.5"
   }
 }
