@@ -2,6 +2,7 @@ global.expect = require('chai').expect
 global.def = require('../index')
 global.mocks = require('./mocks')
 global.log = console.log
+require('colors')
 
 global.mixin1 = mocks.mixin1
 global.mixin2 = mocks.mixin2
