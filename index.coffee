@@ -5,7 +5,7 @@ filter = require('./properties-filter')
 log = console.log
 
 # Module Vars
-defInc = {}
+defType = {}
 options = null # []
 mixins = null # []
 definedAttrs = null # {}
@@ -18,18 +18,18 @@ conf =
     leadingChar: '_'
     enabled: false
 
-defInc =
+defType =
   defObject: (propsDefiner)->
-    defInc.define(propsDefiner, 'object')
+    defType.define(propsDefiner, 'object')
 
   defClass: (propsDefiner)->
-    defInc.define(propsDefiner, 'class')
+    defType.define(propsDefiner, 'class')
 
   defAbstract: (propsDefiner)->
     if propsDefiner.hasOwnProperty('constructor')
-      defInc.define(propsDefiner, 'class')
+      defType.define(propsDefiner, 'class')
     else
-      defInc.define(propsDefiner, 'object')
+      defType.define(propsDefiner, 'object')
 
   ###*
   * Defines a new Object or a Class that can inherit properties from other objects/classes in
@@ -327,16 +327,16 @@ defInc =
     useParentContext = null # {}
 
 module.exports =
-  Class: defInc.defClass
-  Abstract: defInc.defAbstract
-  Object: defInc.defObject
+  Class: defType.defClass
+  Abstract: defType.defAbstract
+  Object: defType.defObject
   # Alias for Object definition, just syntactic sugar
-  Module: defInc.defObject
-  Mixin: defInc.defObject
+  Module: defType.defObject
+  Mixin: defType.defObject
 
   # Shortcuts for nonEnum
   setNonEnum: ->
-    conf = defInc.makeNonEnumSettings(arguments[0], arguments[1])
+    conf = defType.makeNonEnumSettings(arguments[0], arguments[1])
 
   getNonEnum: ->
     conf.nonEnum
