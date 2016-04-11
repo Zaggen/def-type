@@ -1,6 +1,6 @@
 {
   "name": "def-type",
-  "version": "0.5.6",
+  "version": "0.5.7",
   "description": "A nice object and classes definition module that allows multiple composable inheritance.",
   "main": "index.js",
   "scripts": {
